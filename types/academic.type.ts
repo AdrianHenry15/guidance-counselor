@@ -60,6 +60,8 @@ export interface StudentAcademicPlan {
   programId: string
   educationLevel: EducationLevel
   semesters: PlannedSemester[]
+  completedCredits: number
   totalPlannedCredits: number
   estimatedGraduation?: string
+  generatedAt: string
 }

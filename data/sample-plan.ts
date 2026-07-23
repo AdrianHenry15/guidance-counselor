@@ -5,8 +5,10 @@ export const sampleAcademicPlan: StudentAcademicPlan = {
   studentId: "sample-student",
   programId: "bachelor-computer-science",
   educationLevel: "college",
+  completedCredits: 0,
   totalPlannedCredits: 30,
   estimatedGraduation: "Spring 2030",
+  generatedAt: new Date().toISOString(),
   semesters: [
     {
       id: "fall-2027",

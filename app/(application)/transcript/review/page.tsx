@@ -8,8 +8,9 @@ import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { subjectOptions } from "@/data/subject-options"
-import type { SubjectArea } from "@/types/academic.type"
+import type { StudentAcademicPlan, SubjectArea } from "@/types/academic.type"
 import type { TranscriptCourse } from "@/types/transcript.type"
+import { useState } from "react"
 
 function calculateCompletedCredits(courses: TranscriptCourse[]): number {
   return courses.reduce((total, course) => {
@@ -23,8 +24,11 @@ function calculateCompletedCredits(courses: TranscriptCourse[]): number {
 
 export default function TranscriptReviewPage() {
   const router = useRouter()
+  const { transcriptAnalysis, updateTranscriptAnalysis, setGeneratedPlan } =
+    useAcademicPlan()
 
-  const { transcriptAnalysis, updateTranscriptAnalysis } = useAcademicPlan()
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState("")
 
   if (!transcriptAnalysis) {
     return (
@@ -81,16 +85,63 @@ export default function TranscriptReviewPage() {
     })
   }
 
-  function handleGeneratePlan() {
-    const completedCourses = analysis.courses.filter(
+  async function handleGeneratePlan() {
+    const includedCourses = analysis.courses.filter(
       (course) => course.completed,
     )
 
-    if (!completedCourses.length) {
+    if (!includedCourses.length) {
+      setGenerationError(
+        "Include at least one course before generating your plan.",
+      )
       return
     }
 
-    router.push("/planner/generated")
+    try {
+      setIsGenerating(true)
+      setGenerationError("")
+
+      const response = await fetch("/api/planner/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          transcriptCourses: analysis.courses,
+          options: {
+            startTerm: "fall",
+            startYear: 2027,
+            fallSpringCreditTarget: 12,
+            summerCreditTarget: 6,
+            includeSummer: true,
+          },
+        }),
+      })
+
+      const result = (await response.json()) as {
+        success: boolean
+        plan?: StudentAcademicPlan
+        error?: string
+      }
+
+      console.log("Generated plan response:", result)
+
+      if (!response.ok || !result.success || !result.plan) {
+        throw new Error(result.error ?? "Academic plan generation failed.")
+      }
+
+      setGeneratedPlan(result.plan)
+
+      router.push("/planner/generated")
+    } catch (error) {
+      setGenerationError(
+        error instanceof Error
+          ? error.message
+          : "Academic plan generation failed.",
+      )
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const completedCourseCount = analysis.courses.filter(
@@ -118,9 +169,16 @@ export default function TranscriptReviewPage() {
 
             <Button
               onClick={handleGeneratePlan}
-              disabled={!completedCourseCount}>
+              disabled={!completedCourseCount}
+              loading={isGenerating}
+              loadingText="Generating plan...">
               Generate academic plan
             </Button>
+            {generationError ? (
+              <p className="text-sm font-medium text-danger-600">
+                {generationError}
+              </p>
+            ) : null}
           </div>
         </Card>
 
