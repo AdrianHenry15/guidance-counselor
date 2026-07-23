@@ -1,7 +1,5 @@
 import { CalendarDays } from "lucide-react"
-
 import { Card } from "@/components/ui/card"
-
 import { CourseCard } from "./course-card"
 import { PlannedSemester } from "@/types/academic.type"
 

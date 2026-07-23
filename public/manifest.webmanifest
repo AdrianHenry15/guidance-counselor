@@ -1,0 +1,10 @@
+{
+  "name": "Guidance Counselor",
+  "short_name": "Guidance",
+  "description": "Transcript analysis and generalized academic planning.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#315CFF",
+  "orientation": "portrait-primary"
+}

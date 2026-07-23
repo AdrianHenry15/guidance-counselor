@@ -1,9 +1,15 @@
 import { AlertTriangle, Sparkles } from "lucide-react"
-
 import { AppShell } from "@/components/layout/app-shell"
 import { SemesterCard } from "@/components/planner/semester-card"
 import { Card } from "@/components/ui/card"
 import { sampleAcademicPlan } from "@/data/sample-plan"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Review academic progress, upcoming coursework, and graduation estimates.",
+}
 
 export default function PlannerPage() {
   return (

@@ -32,21 +32,24 @@ const navigation = [
 
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-slate-200 bg-white lg:flex lg:flex-col">
-      <div className="flex h-20 items-center border-b border-slate-200 px-6">
+    <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-border bg-surface lg:flex lg:flex-col">
+      <div className="flex h-20 items-center border-b border-border px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-slate-950 text-white">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <GraduationCap className="size-5" />
           </div>
 
           <div>
-            <p className="font-bold text-slate-950">Guidance Counselor</p>
-            <p className="text-xs text-slate-500">Academic planning</p>
+            <p className="font-display font-bold tracking-tight text-text-primary">
+              Guidance Counselor
+            </p>
+
+            <p className="text-xs text-text-tertiary">Academic planning</p>
           </div>
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 space-y-1.5 p-4">
         {navigation.map((item) => {
           const Icon = item.icon
 
@@ -54,18 +57,18 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950">
-              <Icon className="size-5" />
+              className="group flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-subtle hover:text-primary">
+              <Icon className="size-5 text-text-tertiary transition-colors group-hover:text-primary" />
               {item.label}
             </Link>
           )
         })}
       </nav>
 
-      <div className="border-t border-slate-200 p-4">
+      <div className="border-t border-border p-4">
         <Link
           href="/settings"
-          className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+          className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary">
           <Settings className="size-5" />
           Settings
         </Link>

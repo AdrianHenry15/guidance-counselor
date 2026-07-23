@@ -1,5 +1,3 @@
-// src/app/dashboard/page.tsx
-
 import Link from "next/link"
 import {
   ArrowRight,
@@ -14,6 +12,13 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { sampleAcademicPlan } from "@/data/sample-plan"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Review academic progress, upcoming coursework, and graduation estimates.",
+}
 
 export default function DashboardPage() {
   const nextSemester = sampleAcademicPlan.semesters[0]
@@ -24,25 +29,23 @@ export default function DashboardPage() {
       description="Review your progress and next academic steps">
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="space-y-6">
-          <Card className="overflow-hidden bg-slate-950 p-6 text-white sm:p-8">
+          <Card className="overflow-hidden border-0 bg-image:(--gradient-hero) p-6 text-brand-on-surface shadow-lg sm:p-8">
             <div className="max-w-2xl">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-white/10">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-white/15 text-brand-on-surface">
                 <GraduationCap className="size-6" />
               </div>
 
-              <h2 className="mt-6 text-2xl font-bold sm:text-3xl">
+              <h2 className="mt-6 font-display text-2xl font-bold tracking-tight text-brand-on-surface sm:text-3xl">
                 Your academic path is taking shape.
               </h2>
 
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+              <p className="mt-3 max-w-xl text-sm leading-6 text-brand-on-surface-muted sm:text-base">
                 Review your generalized degree plan, adjust your semester
                 workload, and verify courses with your institution.
               </p>
 
               <Link href="/planner" className="mt-6 inline-block">
-                <Button
-                  variant="secondary"
-                  className="border-white bg-white text-slate-950 hover:bg-slate-100">
+                <Button variant="on-brand">
                   View academic plan
                   <ArrowRight className="size-4" />
                 </Button>
@@ -53,19 +56,19 @@ export default function DashboardPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Card className="p-5">
               <FileCheck2 className="size-5 text-slate-600" />
-              <p className="mt-4 text-2xl font-bold text-slate-950">30</p>
+              <p className="mt-4 text-2xl font-bold text-slate-500">30</p>
               <p className="text-sm text-slate-500">Earned credits</p>
             </Card>
 
             <Card className="p-5">
               <BookOpen className="size-5 text-slate-600" />
-              <p className="mt-4 text-2xl font-bold text-slate-950">30</p>
+              <p className="mt-4 text-2xl font-bold text-slate-500">30</p>
               <p className="text-sm text-slate-500">Planned credits</p>
             </Card>
 
             <Card className="p-5">
               <CalendarDays className="size-5 text-slate-600" />
-              <p className="mt-4 text-lg font-bold text-slate-950">
+              <p className="mt-4 text-lg font-bold text-slate-500">
                 Spring 2030
               </p>
               <p className="text-sm text-slate-500">Estimated graduation</p>
@@ -138,7 +141,7 @@ export default function DashboardPage() {
           <Card className="p-5 sm:p-6">
             <h2 className="font-bold text-slate-950">Transcript status</h2>
 
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-slate-400">
               Upload a transcript to replace sample data with your completed
               coursework.
             </p>

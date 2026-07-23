@@ -1,5 +1,8 @@
-import { PlannedCourse } from "@/types/academic.type"
+import type { PlannedCourse } from "@/types/academic.type"
 import { BookOpen, Clock } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { courseStatusBadge } from "@/components/ui/badge.config"
 
 interface CourseCardProps {
   course: PlannedCourse
@@ -24,33 +27,44 @@ const subjectLabels: Record<PlannedCourse["subjectArea"], string> = {
 
 export function CourseCard({ course }: CourseCardProps) {
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+    <article className="relative overflow-hidden rounded-xl border border-border bg-surface p-4 text-text-primary shadow-xs">
+      <div className="absolute inset-y-0 left-0 w-1 bg-[image:var(--gradient-progress)]" />
+
+      <div className="flex items-start gap-3 pl-2">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-subtle text-primary">
           <BookOpen className="size-5" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <h3 className="font-semibold text-slate-950">{course.title}</h3>
-              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-semibold text-text-primary">
+                  {course.title}
+                </h3>
+
+                <Badge variant={courseStatusBadge[course.status]}>
+                  {course.status.replaceAll("_", " ").replaceAll("-", " ")}
+                </Badge>
+              </div>
+
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-text-tertiary">
                 {subjectLabels[course.subjectArea]}
               </p>
             </div>
 
-            <div className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+            <div className="flex shrink-0 items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-secondary">
               <Clock className="size-3.5" />
               {course.credits} credits
             </div>
           </div>
 
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+          <p className="mt-3 text-sm leading-6 text-text-secondary">
             {course.description}
           </p>
 
           {course.prerequisites?.length ? (
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-text-tertiary">
               Prerequisites: {course.prerequisites.length} required
             </p>
           ) : null}
