@@ -1,3 +1,5 @@
+import { PlanValidationResult } from "./plan-validation.type"
+
 export type EducationLevel =
   | "elementary"
   | "middle-school"
@@ -65,4 +67,5 @@ export interface StudentAcademicPlan {
   totalPlannedCredits: number
   estimatedGraduation?: string
   generatedAt: string
+  validation: PlanValidationResult
 }

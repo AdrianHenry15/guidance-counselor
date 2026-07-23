@@ -9,6 +9,7 @@ import { allocateTranscriptCourses } from "./allocate-transcript-courses"
 import { expandProgramRequirements } from "./expand-requirements"
 import { calculateEstimatedGraduation } from "./planner-terms"
 import { scheduleCourses } from "./schedule-courses"
+import { validatePlan } from "./validate-plan"
 
 interface GenerateAcademicPlanArguments {
   program: AcademicProgram
@@ -44,6 +45,8 @@ export function generateAcademicPlan({
   const { completedCourseIds, remainingCourses, appliedTranscriptCredits } =
     allocateTranscriptCourses(requiredCourses, includedTranscriptCourses)
 
+  const completedCourseIdsBeforeScheduling = new Set(completedCourseIds)
+
   const semesters = scheduleCourses({
     courses: remainingCourses,
     completedCourseIds,
@@ -54,6 +57,14 @@ export function generateAcademicPlan({
     (total, semester) => total + calculateCourseCredits(semester.courses),
     0,
   )
+
+  const validation = validatePlan({
+    semesters,
+    initiallyCompletedCourseIds: completedCourseIdsBeforeScheduling,
+    appliedCredits: appliedTranscriptCredits,
+    totalPlannedCredits,
+    programTotalCredits: program.totalCredits,
+  })
 
   const mappedCredits = appliedTranscriptCredits + totalPlannedCredits
 
@@ -74,5 +85,6 @@ export function generateAcademicPlan({
     totalPlannedCredits,
     estimatedGraduation: calculateEstimatedGraduation(semesters),
     generatedAt: new Date().toISOString(),
+    validation,
   }
 }

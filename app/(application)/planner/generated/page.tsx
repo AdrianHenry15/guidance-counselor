@@ -16,6 +16,7 @@ import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { PlanValidationSummary } from "@/components/planner/plan-validation-summary"
 
 export default function GeneratedPlanPage() {
   const router = useRouter()
@@ -58,7 +59,7 @@ export default function GeneratedPlanPage() {
   const remainingCredits = generatedPlan.totalPlannedCredits
 
   const totalProgramCredits =
-    generatedPlan.completedCredits + generatedPlan.totalPlannedCredits
+    generatedPlan.appliedCredits + generatedPlan.totalPlannedCredits
 
   return (
     <AppShell
@@ -138,6 +139,8 @@ export default function GeneratedPlanPage() {
             </Button>
           </div>
         </Card>
+
+        <PlanValidationSummary validation={generatedPlan.validation} />
 
         <div className="space-y-5">
           {generatedPlan.semesters.map((semester) => (
