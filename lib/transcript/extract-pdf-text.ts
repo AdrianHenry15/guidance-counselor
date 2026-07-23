@@ -1,9 +1,19 @@
+/**
+ * Normalized result returned after extracting selectable text from a PDF.
+ */
 interface PdfTextExtractionResult {
   text: string
   pageCount: number
   characterCount: number
 }
 
+/**
+ * Narrows an unknown PDF.js content item to the text-item shape used by this
+ * extractor.
+ *
+ * PDF.js text-content arrays can contain multiple item types, so each item must
+ * be checked before reading its text value.
+ */
 function isTextItem(item: unknown): item is {
   str: string
   hasEOL?: boolean
@@ -16,6 +26,19 @@ function isTextItem(item: unknown): item is {
   )
 }
 
+/**
+ * Extracts selectable text from a PDF file using PDF.js.
+ *
+ * Processing flow:
+ *
+ * 1. Load the PDF from the uploaded file buffer.
+ * 2. Read each page in sequence.
+ * 3. Reconstruct approximate lines from PDF.js text items.
+ * 4. Combine and normalize all extracted page text.
+ *
+ * This function does not perform OCR. Scanned PDFs with no selectable text will
+ * typically return little or no useful content.
+ */
 export async function extractPdfText(
   file: File,
 ): Promise<PdfTextExtractionResult> {

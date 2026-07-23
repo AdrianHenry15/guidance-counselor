@@ -1,14 +1,42 @@
-import { StudentAcademicPlan } from "@/types/academic.type"
+import type { StudentAcademicPlan } from "@/types/academic.type"
 
+/**
+ * Static sample plan used by the dashboard and non-personalized planner page.
+ *
+ * This data exists for presentation and development purposes. Personalized
+ * plans are generated from reviewed transcript data and planning preferences.
+ */
 export const sampleAcademicPlan: StudentAcademicPlan = {
   id: "sample-plan",
   studentId: "sample-student",
   programId: "bachelor-computer-science",
   educationLevel: "college",
+
+  /**
+   * No transcript has been applied to the sample plan.
+   */
   completedCredits: 0,
+  appliedCredits: 0,
+
+  /**
+   * Total credits scheduled across the sample semesters below.
+   */
   totalPlannedCredits: 30,
+
   estimatedGraduation: "Spring 2030",
   generatedAt: new Date().toISOString(),
+
+  /**
+   * The sample schedule is intentionally valid and contains no detected
+   * prerequisite, duplication, credit-load, or credit-mapping issues.
+   */
+  validation: {
+    isValid: true,
+    issues: [],
+    errorCount: 0,
+    warningCount: 0,
+  },
+
   semesters: [
     {
       id: "fall-2027",

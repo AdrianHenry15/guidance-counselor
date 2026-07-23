@@ -7,11 +7,20 @@ import type {
 
 import { normalizeCourseName } from "./normalize-course"
 
+/**
+ * Matches supported grades near the end of a transcript row.
+ */
 const gradePattern =
   /\b(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP)\b(?=\s*(?:[0-9](?:\.[0-9])?\s*(?:credits?|hrs?|hours?))?\s*$)/i
 
+/**
+ * Matches an explicit credit value such as "3 credits" or "4 hrs".
+ */
 const creditPattern = /\b([0-9](?:\.[0-9])?)\s*(?:credits?|hrs?|hours?)\b/i
 
+/**
+ * Converts a parsed grade into the planner's completion status.
+ */
 function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
   if (!grade) {
     return "unknown"
@@ -34,6 +43,9 @@ function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
   return "passed"
 }
 
+/**
+ * Parses transcript text into normalized course records.
+ */
 export function parseTranscriptText(text: string): TranscriptCourse[] {
   return text
     .split(/\r?\n/)
@@ -48,6 +60,9 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
 
       const credits = creditsMatch ? Number(creditsMatch[1]) : 0
 
+      /**
+       * Remove grade and credit values before normalizing the course name.
+       */
       const courseName = line
         .replace(gradePattern, "")
         .replace(creditPattern, "")

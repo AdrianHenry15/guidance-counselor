@@ -116,6 +116,9 @@ const normalizationRules: Array<{
   },
 ]
 
+/**
+ * Converts a transcript course name into a generalized planner course.
+ */
 export function normalizeCourseName(
   originalName: string,
 ): NormalizedCourseResult {
@@ -127,6 +130,9 @@ export function normalizeCourseName(
     return match.result
   }
 
+  /**
+   * Unknown courses remain editable and default to general elective credit.
+   */
   return {
     normalizedTitle: originalName.trim(),
     subjectArea: "general_elective",
