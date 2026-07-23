@@ -1,7 +1,8 @@
+import type { PlannedSemester } from "@/types/academic.type"
 import { CalendarDays } from "lucide-react"
+
+import { CourseCard } from "@/components/planner/course-card"
 import { Card } from "@/components/ui/card"
-import { CourseCard } from "./course-card"
-import { PlannedSemester } from "@/types/academic.type"
 
 interface SemesterCardProps {
   semester: PlannedSemester
@@ -15,26 +16,29 @@ export function SemesterCard({ semester }: SemesterCardProps) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-border bg-surface-subtle p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-slate-950 text-white">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-(image:--gradient-primary) text-brand-on-surface shadow-sm">
             <CalendarDays className="size-5" />
           </div>
 
           <div>
-            <h2 className="font-bold text-slate-950">{semester.label}</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="font-display text-lg font-bold tracking-tight text-text-primary">
+              {semester.label}
+            </h2>
+
+            <p className="mt-0.5 text-sm text-text-tertiary">
               {semester.courses.length} planned courses
             </p>
           </div>
         </div>
 
-        <div className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700">
+        <div className="inline-flex w-fit items-center rounded-full bg-primary-subtle px-3 py-1.5 text-sm font-semibold text-primary">
           {totalCredits} credits
         </div>
       </div>
 
-      <div className="grid gap-3 p-4 sm:p-5">
+      <div className="grid gap-3 bg-surface p-4 sm:p-5">
         {semester.courses.map((course) => (
           <CourseCard key={course.id} course={course} />
         ))}

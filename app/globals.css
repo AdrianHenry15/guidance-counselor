@@ -134,6 +134,7 @@ textarea {
 button,
 a {
   touch-action: manipulation;
+  cursor: pointer;
 }
 
 ::selection {

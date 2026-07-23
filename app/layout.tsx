@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Manrope } from "next/font/google"
 import "./globals.css"
 import { siteMetadata } from "@/config/metadata"
 import { ThemeProvider } from "@/components/providers/theme-provider"
+import { AcademicPlanProvider } from "@/components/providers/academic-plan-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,7 +56,9 @@ export default function RootLayout({
           manrope.variable,
           "min-h-screen bg-background font-sans text-foreground antialiased",
         ].join(" ")}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AcademicPlanProvider>{children}</AcademicPlanProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

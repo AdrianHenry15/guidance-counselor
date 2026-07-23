@@ -1,0 +1,7 @@
+ENC 1101 English Composition I A 3 credits
+ENC 1102 English Composition II B 3 credits
+MAC 1105 College Algebra B 3 credits
+COP 1000C Introduction to Programming A 3 credits
+PSY 2012 General Psychology A 3 credits
+BSC 1005 General Biology B 4 credits
+PHI 2010 Introduction to Philosophy C 3 credits

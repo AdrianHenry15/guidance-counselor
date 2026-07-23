@@ -6,13 +6,25 @@ import { FileText, LockKeyhole, UploadCloud } from "lucide-react"
 import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
+import { AnalyzeTranscriptResponse } from "@/types/transcript.type"
 
-const acceptedTypes = ["application/pdf", "image/jpeg", "image/png"]
-
+const acceptedTypes = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "text/plain",
+  "text/csv",
+]
 export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  const { setTranscriptAnalysis } = useAcademicPlan()
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0]
@@ -39,13 +51,39 @@ export default function UploadPage() {
     setFile(selectedFile)
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     if (!file) {
       setError("Select a transcript before continuing.")
       return
     }
 
-    console.log("Transcript selected:", file)
+    try {
+      setIsAnalyzing(true)
+      setError("")
+
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/transcript/analyze", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = (await response.json()) as AnalyzeTranscriptResponse
+
+      if (!response.ok || !result.success || !result.analysis) {
+        throw new Error(result.error ?? "Transcript analysis failed.")
+      }
+
+      setTranscriptAnalysis(result.analysis)
+      router.push("/transcript/review")
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Transcript analysis failed.",
+      )
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   return (
@@ -72,7 +110,7 @@ export default function UploadPage() {
           <input
             ref={inputRef}
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.txt,.csv"
             className="sr-only"
             onChange={handleFileChange}
           />
@@ -108,8 +146,11 @@ export default function UploadPage() {
             <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
           ) : null}
 
-          <Button className="mt-6 w-full" onClick={handleContinue}>
-            Analyze transcript
+          <Button
+            className="mt-6 w-full"
+            onClick={handleContinue}
+            disabled={isAnalyzing}>
+            {isAnalyzing ? "Analyzing..." : "Analyze transcript"}
           </Button>
         </Card>
 

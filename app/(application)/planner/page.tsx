@@ -1,14 +1,15 @@
+import type { Metadata } from "next"
 import { AlertTriangle, Sparkles } from "lucide-react"
+
 import { AppShell } from "@/components/layout/app-shell"
 import { SemesterCard } from "@/components/planner/semester-card"
+import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { sampleAcademicPlan } from "@/data/sample-plan"
-import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Dashboard",
-  description:
-    "Review academic progress, upcoming coursework, and graduation estimates.",
+  title: "Academic Plan",
+  description: "Review your generalized semester-by-semester academic plan.",
 }
 
 export default function PlannerPage() {
@@ -17,50 +18,56 @@ export default function PlannerPage() {
       title="Academic Plan"
       description="Your generalized path toward graduation">
       <div className="space-y-6">
-        <Card className="p-5 sm:p-6">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-600">
-                <Sparkles className="size-4" />
+        <Card className="overflow-hidden border-0 bg-(image:--gradient-hero) p-5 text-brand-on-surface shadow-lg sm:p-7">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <Badge className="bg-white/15 text-white">
+                <Sparkles className="size-3.5" />
                 Recommended plan
-              </div>
+              </Badge>
 
-              <h2 className="text-2xl font-bold tracking-tight text-slate-950">
+              <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-brand-on-surface sm:text-3xl">
                 Bachelor&apos;s Degree in Computer Science
               </h2>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-brand-on-surface-muted">
                 This schedule uses generalized course categories. Your
-                institution may use different names, numbers, credit values, or
-                prerequisite rules.
+                institution may use different names, credit values, or
+                prerequisite requirements.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:min-w-72">
-              <div className="rounded-xl bg-slate-100 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <div className="grid grid-cols-2 gap-3 md:min-w-72">
+              <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-on-surface-muted">
                   Planned
                 </p>
-                <p className="mt-1 text-xl font-bold text-slate-950">
+
+                <p className="mt-2 font-display text-2xl font-bold tabular-nums text-brand-on-surface">
                   {sampleAcademicPlan.totalPlannedCredits}
                 </p>
-                <p className="text-xs text-slate-500">credits</p>
+
+                <p className="text-xs text-brand-on-surface-muted">credits</p>
               </div>
 
-              <div className="rounded-xl bg-slate-100 p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-on-surface-muted">
                   Estimated
                 </p>
-                <p className="mt-1 text-base font-bold text-slate-950">
+
+                <p className="mt-2 font-display text-base font-bold text-brand-on-surface">
                   {sampleAcademicPlan.estimatedGraduation}
                 </p>
-                <p className="text-xs text-slate-500">graduation</p>
+
+                <p className="text-xs text-brand-on-surface-muted">
+                  graduation
+                </p>
               </div>
             </div>
           </div>
         </Card>
 
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+        <div className="flex items-start gap-3 rounded-2xl border border-warning-500/30 p-4 dark:bg-warning-700/15 dark:text-amber-200">
           <AlertTriangle className="mt-0.5 size-5 shrink-0" />
 
           <p className="text-sm leading-6">

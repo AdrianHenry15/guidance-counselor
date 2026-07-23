@@ -1,4 +1,5 @@
 import { Bell, GraduationCap } from "lucide-react"
+
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface HeaderProps {
@@ -11,7 +12,7 @@ export function Header({ title, description }: HeaderProps) {
     <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur-xl">
       <div className="flex min-h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm lg:hidden">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-(image:--gradient-primary) text-brand-on-surface shadow-sm lg:hidden">
             <GraduationCap className="size-5" />
           </div>
 
@@ -36,7 +37,7 @@ export function Header({ title, description }: HeaderProps) {
           <button
             type="button"
             aria-label="View notifications"
-            className="flex size-11 cursor-pointer items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary">
+            className="flex size-11 cursor-pointer items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-surface-muted hover:text-primary">
             <Bell className="size-5" />
           </button>
         </div>
