@@ -184,7 +184,7 @@ export default function TranscriptReviewPage() {
             {analysis.warnings.map((warning) => (
               <div
                 key={warning}
-                className="rounded-xl border border-warning-500/30 bg-warning-50 p-4 text-sm leading-6 text-warning-700 dark:bg-warning-700/15 dark:text-amber-200">
+                className="rounded-xl border border-warning-500/30  p-4 text-sm leading-6  dark:bg-warning-700/15 dark:text-amber-200">
                 {warning}
               </div>
             ))}
@@ -210,7 +210,7 @@ export default function TranscriptReviewPage() {
                           normalizedTitle: event.target.value,
                         })
                       }
-                      className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100"
+                      className="min-h-11 rounded-xl border bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100"
                     />
                   </label>
 
@@ -226,7 +226,7 @@ export default function TranscriptReviewPage() {
                           subjectArea: event.target.value as SubjectArea,
                         })
                       }
-                      className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100">
+                      className="min-h-11 rounded-xl border bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100">
                       {subjectOptions.map((subject) => (
                         <option key={subject.value} value={subject.value}>
                           {subject.label}
@@ -253,7 +253,7 @@ export default function TranscriptReviewPage() {
                           credits: Number.isFinite(credits) ? credits : 0,
                         })
                       }}
-                      className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100"
+                      className="min-h-11 rounded-xl border bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100"
                     />
                   </label>
 
