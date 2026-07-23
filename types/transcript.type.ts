@@ -1,6 +1,20 @@
 import type { EducationLevel, SubjectArea } from "@/types/academic.type"
 
+export type TranscriptLineType =
+  | "course"
+  | "term_header"
+  | "summary"
+  | "student_info"
+  | "unknown"
+
 export type TranscriptFileType = "pdf" | "image" | "text" | "csv"
+
+export type TranscriptCompletionStatus =
+  | "passed"
+  | "failed"
+  | "withdrawn"
+  | "in_progress"
+  | "unknown"
 
 export interface TranscriptCourse {
   id: string
@@ -9,10 +23,15 @@ export interface TranscriptCourse {
   subjectArea: SubjectArea
   credits: number
   grade?: string
-  completed: boolean
-  institution?: string
-  term?: string
-  year?: number
+
+  completionStatus:
+    | "passed"
+    | "failed"
+    | "withdrawn"
+    | "in_progress"
+    | "unknown"
+
+  includedInPlan: boolean
   confidence: number
 }
 

@@ -1,21 +1,41 @@
-// lib/transcript/parse-transcript-text.ts
-
 import { randomUUID } from "crypto"
 
-import type { TranscriptCourse } from "@/types/transcript.type"
+import type {
+  TranscriptCompletionStatus,
+  TranscriptCourse,
+} from "@/types/transcript.type"
 
 import { normalizeCourseName } from "./normalize-course"
 
-const gradePattern = /\b(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W)\b/i
-
+const gradePattern = /\b(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP|I)\b/i
 const creditPattern = /\b([0-9](?:\.[0-9])?)\s*(?:credits?|hrs?|hours?)\b/i
 
-function isPassingGrade(grade?: string): boolean {
+function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
   if (!grade) {
-    return true
+    return "unknown"
   }
 
-  return !["F", "U", "W"].includes(grade.toUpperCase())
+  const normalizedGrade = grade.toUpperCase()
+
+  if (normalizedGrade === "W") {
+    return "withdrawn"
+  }
+
+  if (["F", "U"].includes(normalizedGrade)) {
+    return "failed"
+  }
+
+  if (["IP", "I"].includes(normalizedGrade)) {
+    return "in_progress"
+  }
+
+  return "passed"
+}
+
+function shouldIncludeInPlan(
+  completionStatus: TranscriptCompletionStatus,
+): boolean {
+  return completionStatus === "passed"
 }
 
 export function parseTranscriptText(text: string): TranscriptCourse[] {
@@ -38,6 +58,8 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
 
       const normalized = normalizeCourseName(courseName)
 
+      const completionStatus = getCompletionStatus(grade)
+
       return {
         id: randomUUID(),
         originalName: courseName,
@@ -45,7 +67,8 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
         subjectArea: normalized.subjectArea,
         credits,
         grade,
-        completed: isPassingGrade(grade),
+        completionStatus,
+        includedInPlan: shouldIncludeInPlan(completionStatus),
         confidence: normalized.normalizedTitle === courseName ? 0.55 : 0.9,
       }
     })
