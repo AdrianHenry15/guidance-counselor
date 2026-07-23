@@ -34,6 +34,7 @@ const features = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50">
+      {/* Header */}
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -65,6 +66,7 @@ export default function HomePage() {
             generalized semester plan that you can verify with your school.
           </p>
 
+          {/* Upload Transcript Redirect Link */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/upload">
               <Button className="w-full sm:w-auto">
@@ -73,6 +75,7 @@ export default function HomePage() {
               </Button>
             </Link>
 
+            {/* Planner Redirect Link */}
             <Link href="/planner">
               <Button variant="secondary" className="w-full sm:w-auto">
                 View sample plan
@@ -96,6 +99,7 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Features */}
         <Card className="grid gap-4 p-5 sm:p-7">
           {features.map((feature) => {
             const Icon = feature.icon

@@ -10,6 +10,12 @@ import { useRouter } from "next/navigation"
 import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
 import { AnalyzeTranscriptResponse } from "@/types/transcript.type"
 
+/**
+ * MIME types accepted by the client-side uploader.
+ *
+ * The API route should still validate the file independently because
+ * browser-provided MIME types can be missing or inaccurate.
+ */
 const acceptedTypes = [
   "application/pdf",
   "image/jpeg",
@@ -17,15 +23,34 @@ const acceptedTypes = [
   "text/plain",
   "text/csv",
 ]
+
+/**
+ * Maximum transcript size accepted by the upload interface.
+ *
+ * This limit should remain synchronized with the transcript-analysis API.
+ */
+const maximumSize = 10 * 1024 * 1024
+
 export default function UploadPage() {
+  /**
+   * Transcript analysis is stored in the shared academic-plan provider so
+   * the review page can access it after client-side navigation.
+   */
+  const { setTranscriptAnalysis } = useAcademicPlan()
+
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  const { setTranscriptAnalysis } = useAcademicPlan()
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
+  /**
+   * Validates the selected file before allowing it to be submitted.
+   *
+   * This provides immediate feedback but does not replace server-side
+   * validation in `/api/transcript/analyze`.
+   */
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0]
 
@@ -39,8 +64,6 @@ export default function UploadPage() {
       return
     }
 
-    const maximumSize = 10 * 1024 * 1024
-
     if (selectedFile.size > maximumSize) {
       setFile(null)
       setError("The transcript must be smaller than 10 MB.")
@@ -51,6 +74,13 @@ export default function UploadPage() {
     setFile(selectedFile)
   }
 
+  /**
+   * Sends the transcript to the server for extraction, parsing, and
+   * normalization.
+   *
+   * A successful response is placed in shared in-memory state before the user
+   * is routed to the transcript-review page.
+   */
   async function handleContinue() {
     if (!file) {
       setError("Select a transcript before continuing.")
@@ -75,6 +105,10 @@ export default function UploadPage() {
         throw new Error(result.error ?? "Transcript analysis failed.")
       }
 
+      /**
+       * Loading a new transcript replaces the current transcript analysis.
+       * The provider should also invalidate any previously generated plan.
+       */
       setTranscriptAnalysis(result.analysis)
       router.push("/transcript/review")
     } catch (error) {
@@ -107,6 +141,10 @@ export default function UploadPage() {
             </p>
           </div>
 
+          {/*
+           * The native file input remains visually hidden. The larger upload
+           * surface below opens it through `inputRef`.
+           */}
           <input
             ref={inputRef}
             type="file"
@@ -115,6 +153,10 @@ export default function UploadPage() {
             onChange={handleFileChange}
           />
 
+          {/*
+           * This button acts as the visible file picker and displays the
+           * selected file's name and size once one has been chosen.
+           */}
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -142,6 +184,10 @@ export default function UploadPage() {
             )}
           </button>
 
+          {/*
+           * Validation and API errors are shown in the same location so the
+           * user has one consistent place to look for upload problems.
+           */}
           {error ? (
             <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
           ) : null}
