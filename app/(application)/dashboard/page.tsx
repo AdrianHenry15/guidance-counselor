@@ -14,13 +14,30 @@ import { Progress } from "@/components/ui/progress"
 import { sampleAcademicPlan } from "@/data/sample-plan"
 import { Metadata } from "next"
 
+/**
+ * Static metadata for the dashboard route.
+ *
+ * The dashboard currently presents sample academic data until it is connected
+ * to the transcript and generated-plan state.
+ */
 export const metadata: Metadata = {
   title: "Dashboard",
   description:
     "Review academic progress, upcoming coursework, and graduation estimates.",
 }
 
+/**
+ * Displays the user's high-level academic overview.
+ *
+ * This page currently uses `sampleAcademicPlan` and hardcoded progress values
+ * as placeholder content. It can later be connected to the generated academic
+ * plan stored in the shared AcademicPlanProvider.
+ */
 export default function DashboardPage() {
+  /**
+   * The first semester in the sample plan is treated as the student's next
+   * upcoming semester.
+   */
   const nextSemester = sampleAcademicPlan.semesters[0]
 
   return (
@@ -29,6 +46,12 @@ export default function DashboardPage() {
       description="Review your progress and next academic steps">
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="space-y-6">
+          {/*
+           * Primary dashboard callout.
+           *
+           * This section introduces the planning workflow and directs the user
+           * to the full academic-plan page.
+           */}
           <Card className="overflow-hidden border-0 bg-image:(--gradient-hero) p-6 text-brand-on-surface shadow-lg sm:p-8">
             <div className="max-w-2xl">
               <div className="flex size-12 items-center justify-center rounded-2xl bg-white/15 text-brand-on-surface">
@@ -53,6 +76,13 @@ export default function DashboardPage() {
             </div>
           </Card>
 
+          {/*
+           * High-level academic metrics.
+           *
+           * These values are currently static placeholders and should
+           * eventually be derived from the active transcript and generated
+           * academic plan.
+           */}
           <div className="grid gap-4 sm:grid-cols-3">
             <Card className="p-5">
               <FileCheck2 className="size-5 text-slate-600" />
@@ -75,6 +105,12 @@ export default function DashboardPage() {
             </Card>
           </div>
 
+          {/*
+           * Degree-completion overview.
+           *
+           * The primary progress bar represents overall credit completion.
+           * The secondary bars divide progress into broad requirement groups.
+           */}
           <Card className="p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -87,6 +123,11 @@ export default function DashboardPage() {
               <p className="text-xl font-bold text-slate-950">25%</p>
             </div>
 
+            {/*
+             * Requirement-category progress is currently represented by
+             * placeholder values rather than calculated requirement
+             * allocations.
+             */}
             <div className="mt-5">
               <Progress value={30} max={120} />
             </div>
@@ -101,6 +142,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6">
+          {/*
+           * Preview of the next scheduled semester.
+           *
+           * The first semester from the sample academic plan is displayed with
+           * its courses and credit values.
+           */}
           <Card className="p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Next semester
@@ -138,6 +185,12 @@ export default function DashboardPage() {
             </Link>
           </Card>
 
+          {/*
+           * Transcript onboarding state.
+           *
+           * Until the dashboard is connected to live provider state, this card
+           * always encourages the user to upload a transcript.
+           */}
           <Card className="p-5 sm:p-6">
             <h2 className="font-bold text-slate-950">Transcript status</h2>
 

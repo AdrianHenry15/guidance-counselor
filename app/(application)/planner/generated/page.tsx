@@ -18,11 +18,28 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PlanValidationSummary } from "@/components/planner/plan-validation-summary"
 
+/**
+ * Displays the personalized academic plan generated from the user's reviewed
+ * transcript and selected scheduling preferences.
+ *
+ * The plan is read from shared in-memory context, so this page depends on the
+ * user completing the upload and review workflow during the current session.
+ */
 export default function GeneratedPlanPage() {
   const router = useRouter()
 
+  /**
+   * `generatedPlan` contains the completed semester-by-semester schedule.
+   *
+   * `transcriptAnalysis` is used only to determine where the user should be
+   * redirected when no generated plan is currently available.
+   */
   const { generatedPlan, transcriptAnalysis } = useAcademicPlan()
 
+  /**
+   * Show a recovery state when the user opens this route without generating
+   * a plan first, or after refreshing and clearing the in-memory provider.
+   */
   if (!generatedPlan) {
     return (
       <AppShell
@@ -42,6 +59,10 @@ export default function GeneratedPlanPage() {
             this page.
           </p>
 
+          {/*
+           * Return to transcript review when an analysis still exists.
+           * Otherwise, restart the workflow from the upload page.
+           */}
           <Button
             className="mt-5"
             onClick={() =>
@@ -54,10 +75,21 @@ export default function GeneratedPlanPage() {
     )
   }
 
+  /**
+   * Derived metrics used by the hero summary and plan overview.
+   */
   const semesterCount = generatedPlan.semesters.length
 
   const remainingCredits = generatedPlan.totalPlannedCredits
 
+  /**
+   * Mapped credits represent transcript credits applied to this degree plus
+   * the remaining credits scheduled by the planner.
+   *
+   * This intentionally uses `appliedCredits` instead of `completedCredits`
+   * because not every earned transcript credit is guaranteed to satisfy the
+   * selected program.
+   */
   const totalProgramCredits =
     generatedPlan.appliedCredits + generatedPlan.totalPlannedCredits
 
@@ -66,6 +98,12 @@ export default function GeneratedPlanPage() {
       title="Generated Plan"
       description="Your generalized path toward graduation">
       <div className="space-y-6">
+        {/*
+         * Primary summary for the generated degree plan.
+         *
+         * It presents the degree, earned credits, remaining credits, term
+         * count, and estimated graduation in a compact overview.
+         */}
         <Card className="overflow-hidden border-0 bg-(image:--gradient-hero) p-5 text-brand-on-surface shadow-lg sm:p-7">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
@@ -113,6 +151,10 @@ export default function GeneratedPlanPage() {
           </div>
         </Card>
 
+        {/*
+         * Explains how the degree-credit total is composed and provides a path
+         * back to transcript review for corrections.
+         */}
         <Card className="p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -140,14 +182,25 @@ export default function GeneratedPlanPage() {
           </div>
         </Card>
 
+        {/*
+         * Shows deterministic validation results for prerequisite order,
+         * duplicate courses, credit overloads, and mapped-credit integrity.
+         */}
         <PlanValidationSummary validation={generatedPlan.validation} />
 
+        {/*
+         * Render the generated semesters in chronological order.
+         */}
         <div className="space-y-5">
           {generatedPlan.semesters.map((semester) => (
             <SemesterCard key={semester.id} semester={semester} />
           ))}
         </div>
 
+        {/*
+         * Clarifies that this generated plan is advisory and should be checked
+         * against the student's institution before registration.
+         */}
         <div className="rounded-2xl border border-info-500/30 p-4 text-sm leading-6 dark:bg-brand-900/20 dark:text-blue-200">
           This plan uses generalized course categories and does not replace your
           institution&apos;s official degree audit. Verify course equivalencies,
@@ -159,12 +212,18 @@ export default function GeneratedPlanPage() {
   )
 }
 
+/**
+ * Props for a single summary metric shown in the generated-plan hero.
+ */
 interface SummaryMetricProps {
   label: string
   value: string
   description: string
 }
 
+/**
+ * Renders one compact plan metric with a label, primary value, and unit.
+ */
 function SummaryMetric({ label, value, description }: SummaryMetricProps) {
   return (
     <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
