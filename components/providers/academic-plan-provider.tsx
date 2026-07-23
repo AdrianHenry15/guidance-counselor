@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react"
@@ -15,7 +14,6 @@ import type { TranscriptAnalysis } from "@/types/transcript.type"
 interface AcademicPlanContextValue {
   transcriptAnalysis: TranscriptAnalysis | null
   generatedPlan: StudentAcademicPlan | null
-  isHydrated: boolean
 
   setTranscriptAnalysis: (analysis: TranscriptAnalysis) => void
 
@@ -25,28 +23,10 @@ interface AcademicPlanContextValue {
 
   clearTranscriptAnalysis: () => void
   clearGeneratedPlan: () => void
+  clearAcademicPlan: () => void
 }
 
 const AcademicPlanContext = createContext<AcademicPlanContextValue | null>(null)
-
-const transcriptStorageKey = "guidance-counselor-transcript"
-
-const planStorageKey = "guidance-counselor-plan"
-
-function readStoredValue<T>(key: string): T | null {
-  const storedValue = window.localStorage.getItem(key)
-
-  if (!storedValue) {
-    return null
-  }
-
-  try {
-    return JSON.parse(storedValue) as T
-  } catch {
-    window.localStorage.removeItem(key)
-    return null
-  }
-}
 
 export function AcademicPlanProvider({
   children,
@@ -59,81 +39,60 @@ export function AcademicPlanProvider({
 
   const [generatedPlan, setPlan] = useState<StudentAcademicPlan | null>(null)
 
-  const [isHydrated, setIsHydrated] = useState(false)
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const storedTranscript =
-        readStoredValue<TranscriptAnalysis>(transcriptStorageKey)
-
-      const storedPlan = readStoredValue<StudentAcademicPlan>(planStorageKey)
-
-      setAnalysis(storedTranscript)
-      setPlan(storedPlan)
-      setIsHydrated(true)
-    }, 0)
-
-    return () => {
-      window.clearTimeout(timeout)
-    }
-  }, [])
-
   const setTranscriptAnalysis = useCallback((analysis: TranscriptAnalysis) => {
     setAnalysis(analysis)
 
-    window.localStorage.setItem(transcriptStorageKey, JSON.stringify(analysis))
+    // A new transcript invalidates the old generated plan.
+    setPlan(null)
   }, [])
 
   const updateTranscriptAnalysis = useCallback(
     (analysis: TranscriptAnalysis) => {
       setAnalysis(analysis)
 
-      window.localStorage.setItem(
-        transcriptStorageKey,
-        JSON.stringify(analysis),
-      )
+      // Any transcript edit makes the existing plan stale.
+      setPlan(null)
     },
     [],
   )
 
   const setGeneratedPlan = useCallback((plan: StudentAcademicPlan) => {
     setPlan(plan)
-
-    window.localStorage.setItem(planStorageKey, JSON.stringify(plan))
   }, [])
 
   const clearTranscriptAnalysis = useCallback(() => {
     setAnalysis(null)
-
-    window.localStorage.removeItem(transcriptStorageKey)
   }, [])
 
   const clearGeneratedPlan = useCallback(() => {
     setPlan(null)
+  }, [])
 
-    window.localStorage.removeItem(planStorageKey)
+  const clearAcademicPlan = useCallback(() => {
+    setAnalysis(null)
+    setPlan(null)
   }, [])
 
   const value = useMemo(
     () => ({
       transcriptAnalysis,
       generatedPlan,
-      isHydrated,
       setTranscriptAnalysis,
       updateTranscriptAnalysis,
       setGeneratedPlan,
       clearTranscriptAnalysis,
       clearGeneratedPlan,
+      clearAcademicPlan,
     }),
     [
       transcriptAnalysis,
       generatedPlan,
-      isHydrated,
       setTranscriptAnalysis,
       updateTranscriptAnalysis,
       setGeneratedPlan,
       clearTranscriptAnalysis,
       clearGeneratedPlan,
+      clearAcademicPlan,
     ],
   )
 

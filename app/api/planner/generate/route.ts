@@ -44,7 +44,8 @@ export async function POST(
     }
 
     const includedCourses = body.transcriptCourses.filter(
-      (course) => course.completed,
+      (course) =>
+        course.completionStatus === "passed" && course.includedInPlan,
     )
 
     if (!includedCourses.length) {

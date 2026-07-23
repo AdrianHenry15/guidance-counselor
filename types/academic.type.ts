@@ -61,6 +61,7 @@ export interface StudentAcademicPlan {
   educationLevel: EducationLevel
   semesters: PlannedSemester[]
   completedCredits: number
+  appliedCredits: number
   totalPlannedCredits: number
   estimatedGraduation?: string
   generatedAt: string

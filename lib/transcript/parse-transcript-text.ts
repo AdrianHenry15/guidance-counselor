@@ -7,7 +7,9 @@ import type {
 
 import { normalizeCourseName } from "./normalize-course"
 
-const gradePattern = /\b(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP|I)\b/i
+const gradePattern =
+  /\b(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP)\b(?=\s*(?:[0-9](?:\.[0-9])?\s*(?:credits?|hrs?|hours?))?\s*$)/i
+
 const creditPattern = /\b([0-9](?:\.[0-9])?)\s*(?:credits?|hrs?|hours?)\b/i
 
 function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
@@ -25,17 +27,11 @@ function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
     return "failed"
   }
 
-  if (["IP", "I"].includes(normalizedGrade)) {
+  if (normalizedGrade === "IP") {
     return "in_progress"
   }
 
   return "passed"
-}
-
-function shouldIncludeInPlan(
-  completionStatus: TranscriptCompletionStatus,
-): boolean {
-  return completionStatus === "passed"
 }
 
 export function parseTranscriptText(text: string): TranscriptCourse[] {
@@ -44,11 +40,13 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
     .map((line) => line.trim())
     .filter((line) => line.length >= 4)
     .map((line) => {
-      const grade = line.match(gradePattern)?.[1]?.toUpperCase()
+      const gradeMatch = line.match(gradePattern)
+
+      const grade = gradeMatch?.[1]?.toUpperCase()
 
       const creditsMatch = line.match(creditPattern)
 
-      const credits = creditsMatch ? Number(creditsMatch[1]) : 3
+      const credits = creditsMatch ? Number(creditsMatch[1]) : 0
 
       const courseName = line
         .replace(gradePattern, "")
@@ -68,7 +66,7 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
         credits,
         grade,
         completionStatus,
-        includedInPlan: shouldIncludeInPlan(completionStatus),
+        includedInPlan: completionStatus === "passed",
         confidence: normalized.normalizedTitle === courseName ? 0.55 : 0.9,
       }
     })

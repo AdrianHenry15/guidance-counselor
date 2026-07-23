@@ -20,27 +20,7 @@ import { Card } from "@/components/ui/card"
 export default function GeneratedPlanPage() {
   const router = useRouter()
 
-  const { generatedPlan, transcriptAnalysis, isHydrated } = useAcademicPlan()
-
-  if (!isHydrated) {
-    return (
-      <AppShell
-        title="Generated Plan"
-        description="Your semester-by-semester academic path">
-        <Card className="mx-auto max-w-xl p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="mx-auto size-12 rounded-xl bg-surface-muted" />
-
-            <div className="mx-auto h-6 w-48 rounded bg-surface-muted" />
-
-            <div className="mx-auto h-4 w-72 max-w-full rounded bg-surface-muted" />
-
-            <div className="mx-auto h-11 w-40 rounded-xl bg-surface-muted" />
-          </div>
-        </Card>
-      </AppShell>
-    )
-  }
+  const { generatedPlan, transcriptAnalysis } = useAcademicPlan()
 
   if (!generatedPlan) {
     return (
