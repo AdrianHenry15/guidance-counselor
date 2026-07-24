@@ -11,40 +11,64 @@ import { calculateEstimatedGraduation } from "./planner-terms"
 import { scheduleCourses } from "./schedule-courses"
 import { validatePlan } from "./validate-plan"
 
+/**
+ * Inputs required to generate a personalized academic plan.
+ */
 interface GenerateAcademicPlanArguments {
   program: AcademicProgram
   transcriptCourses: TranscriptCourse[]
   options: GeneratePlanOptions
 }
 
+/**
+ * Totals credits across any course-like collection.
+ */
 function calculateCourseCredits(courses: Array<{ credits: number }>): number {
   return courses.reduce((total, course) => total + course.credits, 0)
 }
 
+/**
+ * Builds a deterministic semester plan from transcript data and program rules.
+ */
 export function generateAcademicPlan({
   program,
   transcriptCourses,
   options,
 }: GenerateAcademicPlanArguments): StudentAcademicPlan {
+  /**
+   * Only passed courses included by the user are considered.
+   */
   const includedTranscriptCourses = transcriptCourses.filter(
     (course) => course.completionStatus === "passed" && course.includedInPlan,
   )
 
   const completedCredits = calculateCourseCredits(includedTranscriptCourses)
 
+  /**
+   * Expand broad degree requirements into schedulable courses.
+   */
   const requiredCourses = expandProgramRequirements(program)
 
   const requirementCredits = calculateCourseCredits(requiredCourses)
 
+  /**
+   * Prevent generation when expanded requirements do not match the program.
+   */
   if (requirementCredits !== program.totalCredits) {
     throw new Error(
       `Expanded requirements total ${requirementCredits} credits, but ${program.name} requires ${program.totalCredits}.`,
     )
   }
 
+  /**
+   * Apply eligible transcript credits before scheduling remaining courses.
+   */
   const { completedCourseIds, remainingCourses, appliedTranscriptCredits } =
     allocateTranscriptCourses(requiredCourses, includedTranscriptCourses)
 
+  /**
+   * Preserve transcript-completed IDs for prerequisite validation.
+   */
   const completedCourseIdsBeforeScheduling = new Set(completedCourseIds)
 
   const semesters = scheduleCourses({
@@ -58,6 +82,9 @@ export function generateAcademicPlan({
     0,
   )
 
+  /**
+   * Validate prerequisite order, duplicates, credit loads, and totals.
+   */
   const validation = validatePlan({
     semesters,
     initiallyCompletedCourseIds: completedCourseIdsBeforeScheduling,
@@ -68,6 +95,9 @@ export function generateAcademicPlan({
 
   const mappedCredits = appliedTranscriptCredits + totalPlannedCredits
 
+  /**
+   * Ensure applied and planned credits fully cover the degree.
+   */
   if (mappedCredits !== program.totalCredits) {
     throw new Error(
       `Generated plan maps ${mappedCredits} of ${program.totalCredits} required credits.`,

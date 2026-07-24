@@ -4,6 +4,9 @@ import type {
   PlanValidationResult,
 } from "@/types/plan-validation.type"
 
+/**
+ * Inputs required to validate a generated academic plan.
+ */
 interface ValidatePlanArguments {
   semesters: PlannedSemester[]
   initiallyCompletedCourseIds: Set<string>
@@ -12,6 +15,9 @@ interface ValidatePlanArguments {
   programTotalCredits: number
 }
 
+/**
+ * Creates a stable identifier for a validation issue.
+ */
 function createIssueId(
   type: PlanValidationIssue["type"],
   courseId?: string,
@@ -20,10 +26,16 @@ function createIssueId(
   return [type, courseId ?? "plan", semesterId ?? "global"].join(":")
 }
 
+/**
+ * Totals the credits scheduled in one semester.
+ */
 function calculateSemesterCredits(semester: PlannedSemester): number {
   return semester.courses.reduce((total, course) => total + course.credits, 0)
 }
 
+/**
+ * Checks whether mapped credits equal the program requirement.
+ */
 function validateCreditMismatch({
   appliedCredits,
   totalPlannedCredits,
@@ -50,6 +62,9 @@ function validateCreditMismatch({
   ]
 }
 
+/**
+ * Reports semesters that exceed their credit target.
+ */
 function validateSemesterCreditLoads(
   semesters: PlannedSemester[],
 ): PlanValidationIssue[] {
@@ -75,6 +90,9 @@ function validateSemesterCreditLoads(
   })
 }
 
+/**
+ * Reports courses scheduled more than once.
+ */
 function validateDuplicateCourses(
   semesters: PlannedSemester[],
 ): PlanValidationIssue[] {
@@ -107,6 +125,9 @@ function validateDuplicateCourses(
   return issues
 }
 
+/**
+ * Reports courses scheduled before their prerequisites.
+ */
 function validatePrerequisiteOrder(
   semesters: PlannedSemester[],
   initiallyCompletedCourseIds: Set<string>,
@@ -140,6 +161,9 @@ function validatePrerequisiteOrder(
       })
     }
 
+    /**
+     * Courses count as completed only after the semester ends.
+     */
     for (const course of semester.courses) {
       completedBeforeSemester.add(course.id)
     }
@@ -148,6 +172,9 @@ function validatePrerequisiteOrder(
   return issues
 }
 
+/**
+ * Returns prerequisite IDs not completed before the course's semester.
+ */
 function getMissingPrerequisites(
   course: GeneralizedCourse,
   completedCourseIds: Set<string>,
@@ -159,6 +186,9 @@ function getMissingPrerequisites(
   )
 }
 
+/**
+ * Runs all deterministic validation checks for a generated plan.
+ */
 export function validatePlan({
   semesters,
   initiallyCompletedCourseIds,

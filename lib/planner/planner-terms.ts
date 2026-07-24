@@ -1,6 +1,9 @@
 import type { AcademicTerm, PlannedSemester } from "@/types/academic.type"
 import type { GeneratePlanOptions } from "@/types/planner.type"
 
+/**
+ * Returns the next academic term and year.
+ */
 export function getNextTerm(
   term: AcademicTerm,
   year: number,
@@ -34,6 +37,9 @@ export function getNextTerm(
   }
 }
 
+/**
+ * Returns the credit target for the selected term.
+ */
 export function getCreditTarget(
   term: AcademicTerm,
   options: GeneratePlanOptions,
@@ -43,12 +49,18 @@ export function getCreditTarget(
     : options.fallSpringCreditTarget
 }
 
+/**
+ * Formats a term and year into a semester label.
+ */
 export function formatSemesterLabel(term: AcademicTerm, year: number): string {
   const label = term.charAt(0).toUpperCase() + term.slice(1)
 
   return `${label} ${year}`
 }
 
+/**
+ * Uses the final scheduled semester as the graduation estimate.
+ */
 export function calculateEstimatedGraduation(
   semesters: PlannedSemester[],
 ): string | undefined {

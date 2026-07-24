@@ -14,12 +14,18 @@ import {
   getNextTerm,
 } from "./planner-terms"
 
+/**
+ * Inputs required to schedule remaining degree courses.
+ */
 interface ScheduleCoursesArguments {
   courses: GeneralizedCourse[]
   completedCourseIds: Set<string>
   options: GeneratePlanOptions
 }
 
+/**
+ * Checks whether all course prerequisites are already completed.
+ */
 function prerequisitesAreSatisfied(
   course: GeneralizedCourse,
   completedCourseIds: Set<string>,
@@ -30,6 +36,9 @@ function prerequisitesAreSatisfied(
   )
 }
 
+/**
+ * Converts a generalized requirement into a planned course.
+ */
 function toPlannedCourse(course: GeneralizedCourse): PlannedCourse {
   return {
     ...course,
@@ -38,6 +47,9 @@ function toPlannedCourse(course: GeneralizedCourse): PlannedCourse {
   }
 }
 
+/**
+ * Schedules remaining courses into semesters by prerequisites and credit target.
+ */
 export function scheduleCourses({
   courses,
   completedCourseIds,
@@ -49,6 +61,9 @@ export function scheduleCourses({
   let term: AcademicTerm = options.startTerm
   let year = options.startYear
 
+  /**
+   * Prevents infinite scheduling loops.
+   */
   const maximumSemesters = 30
 
   for (
@@ -62,6 +77,9 @@ export function scheduleCourses({
 
     let semesterCredits = 0
 
+    /**
+     * Only courses with completed prerequisites are eligible this term.
+     */
     const available = unscheduled.filter((course) =>
       prerequisitesAreSatisfied(course, completedCourseIds),
     )
@@ -69,6 +87,9 @@ export function scheduleCourses({
     for (const course of available) {
       const exceedsTarget = semesterCredits + course.credits > creditTarget
 
+      /**
+       * Avoid exceeding the target unless the semester is still empty.
+       */
       if (exceedsTarget && semesterCourses.length > 0) {
         continue
       }
@@ -90,10 +111,16 @@ export function scheduleCourses({
 
     const scheduledIds = new Set(semesterCourses.map((course) => course.id))
 
+    /**
+     * Scheduled courses become completed before the next semester.
+     */
     for (const course of semesterCourses) {
       completedCourseIds.add(course.id)
     }
 
+    /**
+     * Remove newly scheduled courses from the remaining queue.
+     */
     for (let index = unscheduled.length - 1; index >= 0; index -= 1) {
       if (scheduledIds.has(unscheduled[index].id)) {
         unscheduled.splice(index, 1)

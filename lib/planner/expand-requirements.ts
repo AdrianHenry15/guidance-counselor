@@ -1,8 +1,14 @@
 import type { GeneralizedCourse, SubjectArea } from "@/types/academic.type"
 import type { AcademicProgram, DegreeRequirement } from "@/types/degree.type"
 
+/**
+ * Default credit size used when splitting broad requirements into courses.
+ */
 const standardCourseCredits = 3
 
+/**
+ * Subject areas rotated through generated general education placeholders.
+ */
 const generalEducationSubjects = [
   "humanities",
   "social_science",
@@ -10,6 +16,9 @@ const generalEducationSubjects = [
   "fine_arts",
 ] satisfies SubjectArea[]
 
+/**
+ * Converts a small positive integer into a Roman numeral.
+ */
 function toRomanNumeral(value: number): string {
   const numerals: Array<[number, string]> = [
     [10, "X"],
@@ -32,6 +41,9 @@ function toRomanNumeral(value: number): string {
   return result
 }
 
+/**
+ * Splits required credits into course-sized values.
+ */
 function createCreditDistribution(
   requiredCredits: number,
   minimumCourses?: number,
@@ -71,6 +83,9 @@ function createCreditDistribution(
   return distribution
 }
 
+/**
+ * Chooses the subject area for a generated placeholder.
+ */
 function getPlaceholderSubjectArea(
   requirement: DegreeRequirement,
   index: number,
@@ -86,6 +101,9 @@ function getPlaceholderSubjectArea(
   return "general_elective"
 }
 
+/**
+ * Builds a readable title for a generated requirement course.
+ */
 function getPlaceholderTitle(
   requirement: DegreeRequirement,
   index: number,
@@ -121,6 +139,9 @@ function getPlaceholderTitle(
   return `${requirement.title} ${numeral}`
 }
 
+/**
+ * Expands a credit-only requirement into generated course placeholders.
+ */
 function expandCreditRequirement(
   requirement: DegreeRequirement,
   program: AcademicProgram,
@@ -146,6 +167,9 @@ function expandCreditRequirement(
   )
 }
 
+/**
+ * Returns explicit courses or generated placeholders for one requirement.
+ */
 export function expandRequirement(
   requirement: DegreeRequirement,
   program: AcademicProgram,
@@ -159,6 +183,9 @@ export function expandRequirement(
   return expandCreditRequirement(requirement, program)
 }
 
+/**
+ * Expands all program requirements into schedulable courses.
+ */
 export function expandProgramRequirements(
   program: AcademicProgram,
 ): GeneralizedCourse[] {

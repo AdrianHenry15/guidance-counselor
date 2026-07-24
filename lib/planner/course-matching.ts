@@ -1,10 +1,16 @@
 import type { GeneralizedCourse } from "@/types/academic.type"
 import type { TranscriptCourse } from "@/types/transcript.type"
 
+/**
+ * Normalizes titles for exact, punctuation-insensitive comparison.
+ */
 export function normalizeComparisonValue(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "")
 }
 
+/**
+ * Checks whether a planned course exactly matches a transcript title.
+ */
 export function courseMatchesTranscript(
   course: GeneralizedCourse,
   transcriptCourse: TranscriptCourse,
@@ -25,10 +31,16 @@ export function courseMatchesTranscript(
   )
 }
 
+/**
+ * Identifies requirement placeholders created during expansion.
+ */
 export function isGeneratedRequirement(course: GeneralizedCourse): boolean {
   return course.tags?.includes("generated-requirement") ?? false
 }
 
+/**
+ * Identifies generated general education placeholders.
+ */
 export function isGeneralEducationPlaceholder(
   course: GeneralizedCourse,
 ): boolean {

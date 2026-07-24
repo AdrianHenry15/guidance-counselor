@@ -7,17 +7,26 @@ import {
   isGeneratedRequirement,
 } from "./course-matching"
 
+/**
+ * Tracks whether a transcript course has already been allocated.
+ */
 interface TranscriptCandidate {
   course: TranscriptCourse
   used: boolean
 }
 
+/**
+ * Result of applying transcript credits to degree requirements.
+ */
 export interface RequirementAllocation {
   completedCourseIds: Set<string>
   remainingCourses: GeneralizedCourse[]
   appliedTranscriptCredits: number
 }
 
+/**
+ * Subjects eligible for general education placeholders.
+ */
 const generalEducationSubjects = new Set<SubjectArea>([
   "english",
   "humanities",
@@ -26,6 +35,9 @@ const generalEducationSubjects = new Set<SubjectArea>([
   "fine_arts",
 ])
 
+/**
+ * Determines whether a transcript course can satisfy a generated placeholder.
+ */
 function canSatisfyPlaceholder(
   transcriptCourse: TranscriptCourse,
   requirementCourse: GeneralizedCourse,
@@ -48,6 +60,9 @@ function canSatisfyPlaceholder(
   )
 }
 
+/**
+ * Applies available transcript credits to one placeholder.
+ */
 function applyCreditsToPlaceholder(
   placeholder: GeneralizedCourse,
   availableCredits: number,
@@ -76,6 +91,11 @@ function applyCreditsToPlaceholder(
   }
 }
 
+/**
+ * Allocates eligible transcript courses to degree requirements.
+ *
+ * Exact named-course matches are processed before generalized placeholders.
+ */
 export function allocateTranscriptCourses(
   requiredCourses: GeneralizedCourse[],
   transcriptCourses: TranscriptCourse[],
@@ -95,6 +115,9 @@ export function allocateTranscriptCourses(
 
   let appliedTranscriptCredits = 0
 
+  /**
+   * First pass: allocate transcript courses to exact named requirements.
+   */
   for (const requiredCourse of requiredCourses) {
     if (isGeneratedRequirement(requiredCourse)) {
       coursesAfterExactMatching.push(requiredCourse)
@@ -124,6 +147,9 @@ export function allocateTranscriptCourses(
 
   const remainingCourses = [...coursesAfterExactMatching]
 
+  /**
+   * Second pass: apply unmatched transcript credits to compatible placeholders.
+   */
   for (const candidate of candidates) {
     if (candidate.used) {
       continue
@@ -131,6 +157,10 @@ export function allocateTranscriptCourses(
 
     let creditsRemaining = candidate.course.credits
 
+    /**
+     * Prefer same-subject placeholders, then general education,
+     * then unrestricted electives.
+     */
     const compatibleIndexes = remainingCourses
       .map((course, index) => ({
         course,
