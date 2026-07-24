@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PlanValidationSummary } from "@/components/planner/plan-validation-summary"
 import { CreditAllocationSummary } from "@/components/planner/credit-allocation-summary"
+import { DegreeAuditSummary } from "@/components/planner/degree-audit-summary"
 
 /**
  * Displays the personalized academic plan generated from the user's reviewed
@@ -182,6 +183,8 @@ export default function GeneratedPlanPage() {
             </Button>
           </div>
         </Card>
+
+        <DegreeAuditSummary audit={generatedPlan.degreeAudit} />
 
         {/* Credit Allocation Summary */}
         <CreditAllocationSummary

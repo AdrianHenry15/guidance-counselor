@@ -162,7 +162,12 @@ function expandCreditRequirement(
       difficulty:
         requirement.id === "major-electives" ? "advanced" : "introductory",
       prerequisites: [],
-      tags: ["generated-requirement", requirement.id, requirement.type],
+      tags: [
+        "degree-requirement",
+        "generated-requirement",
+        requirement.id,
+        requirement.type,
+      ],
     }),
   )
 }
@@ -177,7 +182,17 @@ export function expandRequirement(
   const explicitCourses = requirement.courseOptions ?? []
 
   if (explicitCourses.length > 0) {
-    return explicitCourses
+    return explicitCourses.map((course) => ({
+      ...course,
+      tags: Array.from(
+        new Set([
+          ...(course.tags ?? []),
+          "degree-requirement",
+          requirement.id,
+          requirement.type,
+        ]),
+      ),
+    }))
   }
 
   return expandCreditRequirement(requirement, program)

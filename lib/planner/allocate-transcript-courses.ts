@@ -1,4 +1,6 @@
 import type { GeneralizedCourse, SubjectArea } from "@/types/academic.type"
+import type { TranscriptCreditAllocation } from "@/types/credit-allocation.type"
+import type { DegreeRequirement } from "@/types/degree.type"
 import type { TranscriptCourse } from "@/types/transcript.type"
 
 import {
@@ -6,7 +8,13 @@ import {
   isGeneralEducationPlaceholder,
   isGeneratedRequirement,
 } from "./course-matching"
-import { TranscriptCreditAllocation } from "@/types/credit-allocation.type"
+import { findCourseRequirement } from "./course-requirements"
+
+interface AllocateTranscriptCoursesArguments {
+  requiredCourses: GeneralizedCourse[]
+  transcriptCourses: TranscriptCourse[]
+  requirements: DegreeRequirement[]
+}
 
 /**
  * Tracks whether a transcript course has already been allocated.
@@ -23,6 +31,7 @@ export interface RequirementAllocation {
   completedCourseIds: Set<string>
   remainingCourses: GeneralizedCourse[]
   appliedTranscriptCredits: number
+  appliedCreditsByRequirementId: Record<string, number>
   transcriptAllocations: TranscriptCreditAllocation[]
 }
 
@@ -98,11 +107,11 @@ function applyCreditsToPlaceholder(
  *
  * Exact named-course matches are processed before generalized placeholders.
  */
-export function allocateTranscriptCourses(
-  requiredCourses: GeneralizedCourse[],
-  transcriptCourses: TranscriptCourse[],
-): RequirementAllocation {
-  const transcriptAllocations: TranscriptCreditAllocation[] = []
+export function allocateTranscriptCourses({
+  requiredCourses,
+  transcriptCourses,
+  requirements,
+}: AllocateTranscriptCoursesArguments): RequirementAllocation {
   const candidates: TranscriptCandidate[] = transcriptCourses
     .filter(
       (course) => course.completionStatus === "passed" && course.includedInPlan,
@@ -116,10 +125,31 @@ export function allocateTranscriptCourses(
 
   const coursesAfterExactMatching: GeneralizedCourse[] = []
 
+  const transcriptAllocations: TranscriptCreditAllocation[] = []
+
+  const appliedCreditsByRequirementId: Record<string, number> = {}
+
   let appliedTranscriptCredits = 0
 
   /**
-   * First pass: allocate transcript courses to exact named requirements.
+   * Records applied credits against the parent degree requirement.
+   */
+  function recordRequirementCredits(
+    course: GeneralizedCourse,
+    credits: number,
+  ) {
+    const requirement = findCourseRequirement(course, requirements)
+
+    if (!requirement || credits <= 0) {
+      return
+    }
+
+    appliedCreditsByRequirementId[requirement.id] =
+      (appliedCreditsByRequirementId[requirement.id] ?? 0) + credits
+  }
+
+  /**
+   * First pass: match transcript courses to explicit named requirements.
    */
   for (const requiredCourse of requiredCourses) {
     if (isGeneratedRequirement(requiredCourse)) {
@@ -149,6 +179,8 @@ export function allocateTranscriptCourses(
 
     appliedTranscriptCredits += appliedCredits
 
+    recordRequirementCredits(requiredCourse, appliedCredits)
+
     transcriptAllocations.push({
       transcriptCourseId: match.course.id,
       transcriptCourseTitle: match.course.normalizedTitle,
@@ -165,7 +197,7 @@ export function allocateTranscriptCourses(
   const remainingCourses = [...coursesAfterExactMatching]
 
   /**
-   * Second pass: apply unmatched transcript credits to compatible placeholders.
+   * Second pass: apply unmatched credits to compatible placeholders.
    */
   for (const candidate of candidates) {
     if (candidate.used) {
@@ -174,10 +206,10 @@ export function allocateTranscriptCourses(
 
     let creditsRemaining = candidate.course.credits
 
-    /**
-     * Prefer same-subject placeholders, then general education,
-     * then unrestricted electives.
-     */
+    let candidateAppliedCredits = 0
+
+    let firstRequirementCourse: GeneralizedCourse | undefined
+
     const compatibleIndexes = remainingCourses
       .map((course, index) => ({
         course,
@@ -192,7 +224,7 @@ export function allocateTranscriptCourses(
                 : 3,
       }))
       .filter(({ course }) => canSatisfyPlaceholder(candidate.course, course))
-      .sort((a, b) => a.priority - b.priority)
+      .sort((first, second) => first.priority - second.priority)
       .map(({ index }) => index)
 
     for (const index of compatibleIndexes) {
@@ -207,8 +239,6 @@ export function allocateTranscriptCourses(
       }
 
       const result = applyCreditsToPlaceholder(placeholder, creditsRemaining)
-      let candidateAppliedCredits = 0
-      let firstRequirementCourse: GeneralizedCourse | undefined
 
       if (result.appliedCredits > 0 && !firstRequirementCourse) {
         firstRequirementCourse = placeholder
@@ -220,37 +250,44 @@ export function allocateTranscriptCourses(
 
       appliedTranscriptCredits += result.appliedCredits
 
-      const allocationType =
-        candidateAppliedCredits === 0
-          ? "unapplied"
-          : firstRequirementCourse?.subjectArea === candidate.course.subjectArea
-            ? "subject_requirement"
-            : isGeneralEducationPlaceholder(firstRequirementCourse!)
-              ? "general_education"
-              : "general_elective"
-
-      transcriptAllocations.push({
-        transcriptCourseId: candidate.course.id,
-        transcriptCourseTitle: candidate.course.normalizedTitle,
-        subjectArea: candidate.course.subjectArea,
-        earnedCredits: candidate.course.credits,
-        appliedCredits: candidateAppliedCredits,
-        unappliedCredits: candidate.course.credits - candidateAppliedCredits,
-        requirementCourseId: firstRequirementCourse?.id,
-        requirementCourseTitle: firstRequirementCourse?.title,
-        allocationType,
-      })
+      recordRequirementCredits(placeholder, result.appliedCredits)
 
       remainingCourses[index] = result.remainingCourse ?? {
         ...placeholder,
         credits: 0,
       }
     }
+
+    let allocationType: TranscriptCreditAllocation["allocationType"] =
+      "unapplied"
+
+    if (firstRequirementCourse) {
+      if (firstRequirementCourse.subjectArea === candidate.course.subjectArea) {
+        allocationType = "subject_requirement"
+      } else if (isGeneralEducationPlaceholder(firstRequirementCourse)) {
+        allocationType = "general_education"
+      } else {
+        allocationType = "general_elective"
+      }
+    }
+
+    transcriptAllocations.push({
+      transcriptCourseId: candidate.course.id,
+      transcriptCourseTitle: candidate.course.normalizedTitle,
+      subjectArea: candidate.course.subjectArea,
+      earnedCredits: candidate.course.credits,
+      appliedCredits: candidateAppliedCredits,
+      unappliedCredits: candidate.course.credits - candidateAppliedCredits,
+      requirementCourseId: firstRequirementCourse?.id,
+      requirementCourseTitle: firstRequirementCourse?.title,
+      allocationType,
+    })
   }
 
   return {
     completedCourseIds,
     appliedTranscriptCredits,
+    appliedCreditsByRequirementId,
     transcriptAllocations,
     remainingCourses: remainingCourses.filter((course) => course.credits > 0),
   }

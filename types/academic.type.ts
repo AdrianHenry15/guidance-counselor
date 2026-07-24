@@ -1,4 +1,5 @@
 import { TranscriptCreditAllocation } from "./credit-allocation.type"
+import { DegreeAudit } from "./degree-audit.type"
 import { PlanValidationResult } from "./plan-validation.type"
 
 export type EducationLevel =
@@ -68,6 +69,7 @@ export interface StudentAcademicPlan {
   appliedCredits: number
   totalPlannedCredits: number
   estimatedGraduation?: string
+  degreeAudit: DegreeAudit
   generatedAt: string
   validation: PlanValidationResult
   transcriptAllocations: TranscriptCreditAllocation[]
