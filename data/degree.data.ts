@@ -1,7 +1,7 @@
 import { AcademicProgram } from "@/types/degree.type"
 
 export const computerScienceBachelorProgram: AcademicProgram = {
-  id: "bachelor-computer_science",
+  id: "bachelor-computer-science",
   name: "Bachelor's Degree in Computer Science",
   level: "college",
   credential: "bachelor",

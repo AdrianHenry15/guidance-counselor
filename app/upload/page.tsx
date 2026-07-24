@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
 import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
 import { AnalyzeTranscriptResponse } from "@/types/transcript.type"
+import { createManualTranscriptAnalysis } from "@/lib/transcript/create-manual-transcript-analysis"
 
 /**
  * MIME types accepted by the client-side uploader.
@@ -44,6 +45,16 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  /**
+   * Starts the review workflow without requiring an uploaded file.
+   */
+  function handleManualEntry() {
+    const analysis = createManualTranscriptAnalysis()
+
+    setTranscriptAnalysis(analysis)
+    router.push("/transcript/review")
+  }
 
   /**
    * Validates the selected file before allowing it to be submitted.
@@ -212,15 +223,26 @@ export default function UploadPage() {
             </p>
           </Card>
 
-          <Card className="p-5">
-            <FileText className="size-5 text-slate-700" />
-            <h3 className="mt-3 font-semibold text-slate-950">
-              Manual entry available
+          {/* Manual Entry Card */}
+          <Card className="flex flex-col p-5">
+            <FileText className="size-5 text-text-secondary" />
+
+            <h3 className="mt-3 font-semibold text-text-primary">
+              Enter courses manually
             </h3>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Students can correct extracted courses or enter their completed
-              coursework manually.
+
+            <p className="mt-1 flex-1 text-sm leading-6 text-text-secondary">
+              Build your academic history without uploading a transcript.
             </p>
+
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-5 w-full"
+              onClick={handleManualEntry}
+              disabled={isAnalyzing}>
+              Start manual entry
+            </Button>
           </Card>
         </div>
       </div>

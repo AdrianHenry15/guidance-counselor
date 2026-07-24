@@ -31,6 +31,7 @@ import { Plus } from "lucide-react"
  * planner only when the user generates an academic plan.
  */
 const defaultPlanOptions: GeneratePlanOptions = {
+  programId: "bachelor-computer-science",
   startTerm: "fall",
   startYear: 2027,
   fallSpringCreditTarget: 12,
@@ -159,6 +160,7 @@ function ReviewContent({
          */}
         <TranscriptReviewSummary
           fileName={analysis.fileName}
+          isManual={analysis.fileName === "Manual transcript"}
           detectedCourseCount={analysis.courses.length}
           includedCourseCount={includedCourseCount}
           earnedCredits={analysis.estimatedCreditsEarned}
@@ -222,6 +224,28 @@ function ReviewContent({
             </Button>
           </div>
 
+          {analysis.courses.length === 0 ? (
+            <Card className="border-dashed p-6 text-center">
+              <h3 className="font-display text-lg font-bold text-text-primary">
+                No courses added yet
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-text-secondary">
+                Add your completed courses to begin building an academic plan.
+              </p>
+
+              <Button
+                type="button"
+                className="mt-5"
+                onClick={addCourse}
+                disabled={isGenerating}>
+                <Plus className="size-4" />
+                Add your first course
+              </Button>
+            </Card>
+          ) : null}
+
+          {/* Manually Added Courses on Transcript upload */}
           {manuallyAddedCourses.length > 0 ? (
             <div className="space-y-4">
               <div>
@@ -245,26 +269,28 @@ function ReviewContent({
             </div>
           ) : null}
 
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-display text-base font-bold text-text-primary">
-                Transcript courses
-              </h3>
+          {extractedCourses.length > 0 ? (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-display text-base font-bold text-text-primary">
+                  Transcript courses
+                </h3>
 
-              <p className="mt-1 text-sm text-text-secondary">
-                Courses detected from your uploaded transcript.
-              </p>
+                <p className="mt-1 text-sm text-text-secondary">
+                  Courses detected from your uploaded transcript.
+                </p>
+              </div>
+              {/* Extracted courses on Transcript upload */}
+              {extractedCourses.map((course) => (
+                <TranscriptCourseCard
+                  key={course.id}
+                  course={course}
+                  onUpdate={updateCourse}
+                  onRemove={removeCourse}
+                />
+              ))}
             </div>
-
-            {extractedCourses.map((course) => (
-              <TranscriptCourseCard
-                key={course.id}
-                course={course}
-                onUpdate={updateCourse}
-                onRemove={removeCourse}
-              />
-            ))}
-          </div>
+          ) : null}
         </section>
       </div>
     </AppShell>

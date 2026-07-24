@@ -46,7 +46,7 @@ export default function PlannerPage() {
               </Badge>
 
               <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-brand-on-surface sm:text-3xl">
-                Bachelor&apos;s Degree in Computer Science
+                {sampleAcademicPlan.programName}
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-brand-on-surface-muted">
@@ -81,7 +81,7 @@ export default function PlannerPage() {
                 </p>
 
                 <p className="mt-2 font-display text-base font-bold text-brand-on-surface">
-                  {sampleAcademicPlan.estimatedGraduation}
+                  {sampleAcademicPlan.estimatedGraduation ?? "Unknown"}
                 </p>
 
                 <p className="text-xs text-brand-on-surface-muted">

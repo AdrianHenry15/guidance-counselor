@@ -1,5 +1,6 @@
 "use client"
 
+import { academicPrograms } from "@/data/program"
 import type { GeneratePlanOptions } from "@/types/planner.type"
 
 /**
@@ -30,7 +31,28 @@ export function PlanningPreferences({
   }
 
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-6">
+      <label className="grid gap-1.5">
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+          Academic program
+        </span>
+
+        <select
+          value={value.programId}
+          disabled={disabled}
+          onChange={(event) =>
+            updateOptions({
+              programId: event.target.value,
+            })
+          }
+          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60">
+          {academicPrograms.map((program) => (
+            <option key={program.id} value={program.id}>
+              {program.name}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="grid gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Starting term

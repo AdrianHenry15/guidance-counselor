@@ -16,6 +16,7 @@ interface GeneratePlanRequestValidation {
 const validTerms = new Set<AcademicTerm>(["fall", "spring", "summer"])
 
 const defaultOptions: GeneratePlanOptions = {
+  programId: "bachelor-computer-science",
   startTerm: "fall",
   startYear: 2027,
   fallSpringCreditTarget: 12,

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
  */
 interface TranscriptReviewSummaryProps {
   fileName: string
+  isManual: boolean
   detectedCourseCount: number
   includedCourseCount: number
   earnedCredits: number
@@ -19,6 +20,7 @@ interface TranscriptReviewSummaryProps {
  */
 export function TranscriptReviewSummary({
   fileName,
+  isManual,
   detectedCourseCount,
   includedCourseCount,
   earnedCredits,
@@ -35,8 +37,9 @@ export function TranscriptReviewSummary({
           </h2>
 
           <p className="mt-1 text-sm text-text-secondary">
-            {detectedCourseCount} courses detected · {includedCourseCount}{" "}
-            included · {earnedCredits} credits earned
+            {detectedCourseCount}{" "}
+            {isManual ? "courses added" : "courses detected"} ·{" "}
+            {includedCourseCount} included · {earnedCredits} credits earned
           </p>
         </div>
 

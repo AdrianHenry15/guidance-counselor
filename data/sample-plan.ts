@@ -10,8 +10,9 @@ export const sampleAcademicPlan: StudentAcademicPlan = {
   id: "sample-plan",
   studentId: "sample-student",
   programId: "bachelor-computer-science",
+  programName: "Bachelor's Degree in Computer Science",
   educationLevel: "college",
-
+  transcriptAllocations: [],
   /**
    * No transcript has been applied to the sample plan.
    */

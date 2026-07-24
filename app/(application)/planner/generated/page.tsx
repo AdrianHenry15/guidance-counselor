@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PlanValidationSummary } from "@/components/planner/plan-validation-summary"
+import { CreditAllocationSummary } from "@/components/planner/credit-allocation-summary"
 
 /**
  * Displays the personalized academic plan generated from the user's reviewed
@@ -181,6 +182,11 @@ export default function GeneratedPlanPage() {
             </Button>
           </div>
         </Card>
+
+        {/* Credit Allocation Summary */}
+        <CreditAllocationSummary
+          allocations={generatedPlan.transcriptAllocations}
+        />
 
         {/*
          * Shows deterministic validation results for prerequisite order,

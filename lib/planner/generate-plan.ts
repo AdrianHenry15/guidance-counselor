@@ -63,8 +63,12 @@ export function generateAcademicPlan({
   /**
    * Apply eligible transcript credits before scheduling remaining courses.
    */
-  const { completedCourseIds, remainingCourses, appliedTranscriptCredits } =
-    allocateTranscriptCourses(requiredCourses, includedTranscriptCourses)
+  const {
+    completedCourseIds,
+    remainingCourses,
+    appliedTranscriptCredits,
+    transcriptAllocations,
+  } = allocateTranscriptCourses(requiredCourses, includedTranscriptCourses)
 
   /**
    * Preserve transcript-completed IDs for prerequisite validation.
@@ -108,11 +112,13 @@ export function generateAcademicPlan({
     id: randomUUID(),
     studentId: "local-student",
     programId: program.id,
+    programName: program.name,
     educationLevel: program.level,
     semesters,
     completedCredits,
     appliedCredits: appliedTranscriptCredits,
     totalPlannedCredits,
+    transcriptAllocations,
     estimatedGraduation: calculateEstimatedGraduation(semesters),
     generatedAt: new Date().toISOString(),
     validation,

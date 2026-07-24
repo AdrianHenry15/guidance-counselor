@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 
-import { computerScienceBachelorProgram } from "@/data/degree.data"
 import { RequestValidationError } from "@/lib/api/request-validation-error"
 import { generateAcademicPlan } from "@/lib/planner/generate-plan"
 import { validateGeneratePlanRequest } from "@/lib/planner/validate-generate-plan-request"
 import type { StudentAcademicPlan } from "@/types/academic.type"
+import { getAcademicProgram } from "@/data/program"
 
 /**
  * Standard response returned by the plan-generation endpoint.
@@ -33,8 +33,16 @@ export async function POST(
 
     const { transcriptCourses, options } = validateGeneratePlanRequest(body)
 
+    const program = getAcademicProgram(options.programId)
+
+    if (!program) {
+      throw new RequestValidationError(
+        "The selected academic program could not be found.",
+      )
+    }
+
     const plan = generateAcademicPlan({
-      program: computerScienceBachelorProgram,
+      program,
       transcriptCourses,
       options,
     })
