@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto"
 import { NextResponse } from "next/server"
+
 import { extractPdfText } from "@/lib/transcript/extract-pdf-text"
 import { isUsablePdfText } from "@/lib/transcript/is-usable-pdf-text"
 import { parseTranscriptText } from "@/lib/transcript/parse-transcript-text"
@@ -11,30 +12,58 @@ import type {
 } from "@/types/transcript.type"
 
 /**
- * PDF extraction depends on Node-compatible APIs, so this route must run
- * in the Node.js runtime rather than the Edge runtime.
+ * PDF extraction requires Node-compatible APIs.
  */
 export const runtime = "nodejs"
 
+const maximumFileSize = 10 * 1024 * 1024
+const multipartOverheadAllowance = 1024 * 1024
+
+const acceptedMimeTypes = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "text/plain",
+  "text/csv",
+])
+
+const acceptedExtensions = new Set(["pdf", "jpg", "jpeg", "png", "txt", "csv"])
+
 /**
- * Determines how the uploaded transcript should be processed.
- *
- * File extensions are checked as a fallback because browser-provided MIME
- * types can occasionally be missing or inaccurate.
+ * Returns the lowercase extension without the leading period.
+ */
+function getFileExtension(file: File): string {
+  return file.name.split(".").at(-1)?.toLowerCase() ?? ""
+}
+
+/**
+ * Checks whether the upload uses a supported MIME type or extension.
+ */
+function isAcceptedFile(file: File): boolean {
+  return (
+    acceptedMimeTypes.has(file.type) ||
+    acceptedExtensions.has(getFileExtension(file))
+  )
+}
+
+/**
+ * Determines which transcript-processing strategy should be used.
  */
 function getFileType(file: File): TranscriptFileType {
-  if (
-    file.type === "application/pdf" ||
-    file.name.toLowerCase().endsWith(".pdf")
-  ) {
+  const extension = getFileExtension(file)
+
+  if (file.type === "application/pdf" || extension === "pdf") {
     return "pdf"
   }
 
-  if (file.type.startsWith("image/")) {
+  if (
+    file.type.startsWith("image/") ||
+    ["jpg", "jpeg", "png"].includes(extension)
+  ) {
     return "image"
   }
 
-  if (file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv")) {
+  if (file.type === "text/csv" || extension === "csv") {
     return "csv"
   }
 
@@ -42,32 +71,40 @@ function getFileType(file: File): TranscriptFileType {
 }
 
 /**
- * Accepts a transcript upload, extracts readable text, parses course rows,
- * and returns a normalized transcript analysis.
- *
- * Current supported formats:
- *
- * - TXT
- * - CSV
- * - selectable-text PDF
- *
- * Image files and scanned PDFs will require an OCR fallback in a later phase.
+ * Extracts and normalizes course data from an uploaded transcript.
  */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<AnalyzeTranscriptResponse>> {
   try {
     /**
-     * Transcript files are submitted as multipart form data under the
-     * `file` field.
+     * Reject clearly oversized multipart requests before parsing the body.
      */
+    const contentLength = request.headers.get("content-length")
+
+    if (contentLength) {
+      const requestSize = Number(contentLength)
+
+      if (
+        Number.isFinite(requestSize) &&
+        requestSize > maximumFileSize + multipartOverheadAllowance
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "The transcript upload is too large.",
+          },
+          {
+            status: 413,
+          },
+        )
+      }
+    }
+
     const formData = await request.formData()
 
     const file = formData.get("file")
 
-    /**
-     * Reject requests that do not contain a valid uploaded File object.
-     */
     if (!(file instanceof File)) {
       return NextResponse.json(
         {
@@ -80,13 +117,29 @@ export async function POST(
       )
     }
 
-    /**
-     * Keep the server-side file limit synchronized with the upload page.
-     *
-     * Client-side validation improves usability, but this server check is
-     * required because HTTP requests cannot be trusted.
-     */
-    const maximumFileSize = 10 * 1024 * 1024
+    if (!isAcceptedFile(file)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Upload a PDF, JPG, PNG, TXT, or CSV transcript.",
+        },
+        {
+          status: 415,
+        },
+      )
+    }
+
+    if (file.size === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "The uploaded transcript is empty.",
+        },
+        {
+          status: 422,
+        },
+      )
+    }
 
     if (file.size > maximumFileSize) {
       return NextResponse.json(
@@ -102,21 +155,10 @@ export async function POST(
 
     const fileType = getFileType(file)
 
-    /**
-     * Parsed courses are populated by the extraction strategy appropriate
-     * for the uploaded file type.
-     */
     let courses: TranscriptCourse[] = []
-    /**
-     * Warnings communicate non-fatal extraction concerns to the review page.
-     */
     const warnings: string[] = []
 
     if (fileType === "text" || fileType === "csv") {
-      /**
-       * Plain-text and CSV files can be read directly without an extraction
-       * library.
-       */
       const text = await file.text()
 
       courses = parseTranscriptText(text)
@@ -133,18 +175,10 @@ export async function POST(
         )
       }
     } else if (fileType === "pdf") {
-      /**
-       * Extract selectable text from the PDF before running transcript-row
-       * parsing.
-       */
       const extraction = await extractPdfText(file)
 
       /**
-       * Temporary development logging helps verify whether PDF extraction
-       * preserves readable transcript content.
-       *
-       * Avoid logging transcript previews in production because transcripts
-       * may contain sensitive student information.
+       * Transcript contents should never be logged in production.
        */
       if (process.env.NODE_ENV === "development") {
         console.log("PDF extraction result:", {
@@ -155,10 +189,6 @@ export async function POST(
         })
       }
 
-      /**
-       * PDFs with very little selectable text are likely scanned documents.
-       * Those files should be routed through OCR once that fallback exists.
-       */
       if (!isUsablePdfText(extraction.text)) {
         return NextResponse.json(
           {
@@ -174,10 +204,6 @@ export async function POST(
 
       courses = parseTranscriptText(extraction.text)
 
-      /**
-       * A PDF may contain readable text without using a transcript layout
-       * that the current parser recognizes.
-       */
       if (!courses.length) {
         return NextResponse.json(
           {
@@ -191,20 +217,12 @@ export async function POST(
         )
       }
 
-      /**
-       * PDF extraction can alter spacing and line structure, so users should
-       * review every detected course before plan generation.
-       */
       warnings.push(
         `Extracted selectable text from ${extraction.pageCount} PDF ${
           extraction.pageCount === 1 ? "page" : "pages"
         }. Review every detected course before generating a plan.`,
       )
     } else {
-      /**
-       * Images are accepted by the upload UI in preparation for OCR support,
-       * but they cannot yet be analyzed by the current backend pipeline.
-       */
       return NextResponse.json(
         {
           success: false,
@@ -217,10 +235,6 @@ export async function POST(
       )
     }
 
-    /**
-     * Only passed courses that are initially included in planning count
-     * toward the estimated earned-credit total.
-     */
     const earnedCredits = courses
       .filter(
         (course) =>
@@ -228,12 +242,6 @@ export async function POST(
       )
       .reduce((total, course) => total + course.credits, 0)
 
-    /**
-     * Package the normalized transcript data for the review workflow.
-     *
-     * The analysis is currently returned directly to the client and stored
-     * in in-memory React context. Persistent user storage will be added later.
-     */
     const analysis: TranscriptAnalysis = {
       id: randomUUID(),
       fileName: file.name,
@@ -250,10 +258,6 @@ export async function POST(
       analysis,
     })
   } catch (error) {
-    /**
-     * Preserve the original error in server logs while returning a generic
-     * message to the client.
-     */
     console.error("Transcript analysis failed:", error)
 
     return NextResponse.json(

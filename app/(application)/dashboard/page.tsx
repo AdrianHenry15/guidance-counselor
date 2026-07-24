@@ -1,8 +1,11 @@
+"use client"
+
 import Link from "next/link"
 import {
   ArrowRight,
   BookOpen,
   CalendarDays,
+  CheckCircle2,
   FileCheck2,
   GraduationCap,
 } from "lucide-react"
@@ -11,20 +14,7 @@ import { AppShell } from "@/components/layout/app-shell"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { sampleAcademicPlan } from "@/data/sample-plan"
-import { Metadata } from "next"
-
-/**
- * Static metadata for the dashboard route.
- *
- * The dashboard currently presents sample academic data until it is connected
- * to the transcript and generated-plan state.
- */
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description:
-    "Review academic progress, upcoming coursework, and graduation estimates.",
-}
+import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
 
 /**
  * Displays the user's high-level academic overview.
@@ -35,10 +25,58 @@ export const metadata: Metadata = {
  */
 export default function DashboardPage() {
   /**
-   * The first semester in the sample plan is treated as the student's next
-   * upcoming semester.
+   * Displays live transcript and generated-plan data from the current session.
    */
-  const nextSemester = sampleAcademicPlan.semesters[0]
+  const { transcriptAnalysis, generatedPlan } = useAcademicPlan()
+
+  /**
+   * Direct the user to the next relevant step in the planning workflow.
+   */
+  const primaryAction = generatedPlan
+    ? {
+        href: "/planner/generated",
+        label: "View academic plan",
+      }
+    : transcriptAnalysis
+      ? {
+          href: "/transcript/review",
+          label: "Review transcript",
+        }
+      : {
+          href: "/upload",
+          label: "Upload transcript",
+        }
+
+  const earnedCredits =
+    generatedPlan?.completedCredits ??
+    transcriptAnalysis?.estimatedCreditsEarned ??
+    0
+
+  const appliedCredits = generatedPlan?.appliedCredits ?? 0
+
+  const plannedCredits = generatedPlan?.totalPlannedCredits ?? 0
+
+  const totalProgramCredits = generatedPlan
+    ? generatedPlan.appliedCredits + generatedPlan.totalPlannedCredits
+    : 120
+
+  /**
+   * Degree progress uses credits applied to the selected program rather than
+   * every earned transcript credit.
+   */
+  const progressPercentage =
+    totalProgramCredits > 0
+      ? Math.round((appliedCredits / totalProgramCredits) * 100)
+      : 0
+
+  const nextSemester = generatedPlan?.semesters[0]
+
+  const estimatedGraduation = generatedPlan?.estimatedGraduation
+
+  const includedCourseCount =
+    transcriptAnalysis?.courses.filter(
+      (course) => course.completionStatus === "passed" && course.includedInPlan,
+    ).length ?? 0
 
   return (
     <AppShell
@@ -46,163 +84,222 @@ export default function DashboardPage() {
       description="Review your progress and next academic steps">
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
         <div className="space-y-6">
-          {/*
-           * Primary dashboard callout.
-           *
-           * This section introduces the planning workflow and directs the user
-           * to the full academic-plan page.
-           */}
-          <Card className="overflow-hidden border-0 bg-image:(--gradient-hero) p-6 text-brand-on-surface shadow-lg sm:p-8">
+          <Card className="overflow-hidden border-0 bg-(image:--gradient-hero) p-6 text-brand-on-surface shadow-lg sm:p-8">
             <div className="max-w-2xl">
               <div className="flex size-12 items-center justify-center rounded-2xl bg-white/15 text-brand-on-surface">
                 <GraduationCap className="size-6" />
               </div>
 
               <h2 className="mt-6 font-display text-2xl font-bold tracking-tight text-brand-on-surface sm:text-3xl">
-                Your academic path is taking shape.
+                {generatedPlan
+                  ? "Your academic plan is ready."
+                  : transcriptAnalysis
+                    ? "Your transcript is ready for review."
+                    : "Start building your academic path."}
               </h2>
 
               <p className="mt-3 max-w-xl text-sm leading-6 text-brand-on-surface-muted sm:text-base">
-                Review your generalized degree plan, adjust your semester
-                workload, and verify courses with your institution.
+                {generatedPlan
+                  ? "Review your semester schedule, validation results, and estimated graduation."
+                  : transcriptAnalysis
+                    ? "Confirm your detected coursework and choose your scheduling preferences."
+                    : "Upload your transcript to identify completed coursework and generate a personalized academic plan."}
               </p>
 
-              <Link href="/planner" className="mt-6 inline-block">
+              <Link href={primaryAction.href} className="mt-6 inline-block">
                 <Button variant="on-brand">
-                  View academic plan
+                  {primaryAction.label}
                   <ArrowRight className="size-4" />
                 </Button>
               </Link>
             </div>
           </Card>
 
-          {/*
-           * High-level academic metrics.
-           *
-           * These values are currently static placeholders and should
-           * eventually be derived from the active transcript and generated
-           * academic plan.
-           */}
           <div className="grid gap-4 sm:grid-cols-3">
             <Card className="p-5">
-              <FileCheck2 className="size-5 text-slate-600" />
-              <p className="mt-4 text-2xl font-bold text-slate-500">30</p>
-              <p className="text-sm text-slate-500">Earned credits</p>
-            </Card>
+              <FileCheck2 className="size-5 text-text-secondary" />
 
-            <Card className="p-5">
-              <BookOpen className="size-5 text-slate-600" />
-              <p className="mt-4 text-2xl font-bold text-slate-500">30</p>
-              <p className="text-sm text-slate-500">Planned credits</p>
-            </Card>
-
-            <Card className="p-5">
-              <CalendarDays className="size-5 text-slate-600" />
-              <p className="mt-4 text-lg font-bold text-slate-500">
-                Spring 2030
+              <p className="mt-4 text-2xl font-bold text-text-primary">
+                {earnedCredits}
               </p>
-              <p className="text-sm text-slate-500">Estimated graduation</p>
+
+              <p className="text-sm text-text-secondary">Earned credits</p>
+            </Card>
+
+            <Card className="p-5">
+              <BookOpen className="size-5 text-text-secondary" />
+
+              <p className="mt-4 text-2xl font-bold text-text-primary">
+                {plannedCredits}
+              </p>
+
+              <p className="text-sm text-text-secondary">Planned credits</p>
+            </Card>
+
+            <Card className="p-5">
+              <CalendarDays className="size-5 text-text-secondary" />
+
+              <p className="mt-4 text-lg font-bold text-text-primary">
+                {estimatedGraduation}
+              </p>
+
+              <p className="text-sm text-text-secondary">
+                Estimated graduation
+              </p>
             </Card>
           </div>
 
-          {/*
-           * Degree-completion overview.
-           *
-           * The primary progress bar represents overall credit completion.
-           * The secondary bars divide progress into broad requirement groups.
-           */}
           <Card className="p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="font-bold text-slate-950">Degree progress</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  30 of approximately 120 credits completed
+                <h2 className="font-bold text-text-primary">Degree progress</h2>
+
+                <p className="mt-1 text-sm text-text-secondary">
+                  {generatedPlan
+                    ? `${appliedCredits} of ${totalProgramCredits} credits applied`
+                    : "Generate a plan to calculate degree progress"}
                 </p>
               </div>
 
-              <p className="text-xl font-bold text-slate-950">25%</p>
+              <p className="text-xl font-bold text-text-primary">
+                {progressPercentage}%
+              </p>
             </div>
 
-            {/*
-             * Requirement-category progress is currently represented by
-             * placeholder values rather than calculated requirement
-             * allocations.
-             */}
             <div className="mt-5">
-              <Progress value={30} max={120} />
+              <Progress value={appliedCredits} max={totalProgramCredits} />
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Progress label="General education" value={18} max={36} />
-              <Progress label="Computer science" value={6} max={45} />
-              <Progress label="Mathematics and science" value={6} max={23} />
-              <Progress label="Electives" value={0} max={16} />
-            </div>
+            {generatedPlan ? (
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <Progress
+                  label="Applied credits"
+                  value={appliedCredits}
+                  max={totalProgramCredits}
+                />
+
+                <Progress
+                  label="Remaining credits"
+                  value={plannedCredits}
+                  max={totalProgramCredits}
+                />
+              </div>
+            ) : null}
           </Card>
         </div>
 
         <div className="space-y-6">
-          {/*
-           * Preview of the next scheduled semester.
-           *
-           * The first semester from the sample academic plan is displayed with
-           * its courses and credit values.
-           */}
-          <Card className="p-5 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Next semester
-            </p>
+          {nextSemester ? (
+            <Card className="p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                Next semester
+              </p>
 
-            <h2 className="mt-2 text-xl font-bold text-slate-950">
-              {nextSemester.label}
-            </h2>
+              <h2 className="mt-2 font-display text-xl font-bold text-text-primary">
+                {nextSemester.label}
+              </h2>
 
-            <div className="mt-5 space-y-3">
-              {nextSemester.courses.map((course) => (
-                <div
-                  key={course.id}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">
-                      {course.title}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {course.subjectArea.replaceAll("-", " ")}
+              <div className="mt-5 space-y-3">
+                {nextSemester.courses.map((course) => (
+                  <div
+                    key={course.id}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-surface-muted p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-text-primary">
+                        {course.title}
+                      </p>
+
+                      <p className="text-xs capitalize text-text-tertiary">
+                        {course.subjectArea.replaceAll("_", " ")}
+                      </p>
+                    </div>
+
+                    <p className="shrink-0 text-xs font-medium text-text-secondary">
+                      {course.credits} cr.
                     </p>
                   </div>
+                ))}
+              </div>
 
-                  <p className="shrink-0 text-xs font-medium text-slate-500">
-                    {course.credits} cr.
-                  </p>
-                </div>
-              ))}
-            </div>
+              <Link href="/planner/generated" className="mt-5 block">
+                <Button variant="secondary" className="w-full">
+                  Review semester
+                </Button>
+              </Link>
+            </Card>
+          ) : (
+            <Card className="p-5 sm:p-6">
+              <CalendarDays className="size-5 text-text-secondary" />
 
-            <Link href="/planner" className="mt-5 block">
-              <Button variant="secondary" className="w-full">
-                Review semester
+              <h2 className="mt-3 font-bold text-text-primary">
+                No semester plan yet
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-text-secondary">
+                {transcriptAnalysis
+                  ? "Review your transcript and generate a plan to see your next semester."
+                  : "Upload your transcript to begin building your academic schedule."}
+              </p>
+
+              <Link href={primaryAction.href} className="mt-5 block">
+                <Button variant="secondary" className="w-full">
+                  {primaryAction.label}
+                </Button>
+              </Link>
+            </Card>
+          )}
+
+          <Card className="p-5 sm:p-6">
+            <h2 className="font-bold text-text-primary">Transcript status</h2>
+
+            <p className="mt-2 text-sm leading-6 text-text-secondary">
+              {transcriptAnalysis
+                ? `${transcriptAnalysis.courses.length} courses detected with ${includedCourseCount} currently included.`
+                : "No transcript has been uploaded during this session."}
+            </p>
+
+            <Link
+              href={transcriptAnalysis ? "/transcript/review" : "/upload"}
+              className="mt-5 block">
+              <Button className="w-full">
+                {transcriptAnalysis ? "Review transcript" : "Upload transcript"}
               </Button>
             </Link>
           </Card>
 
-          {/*
-           * Transcript onboarding state.
-           *
-           * Until the dashboard is connected to live provider state, this card
-           * always encourages the user to upload a transcript.
-           */}
-          <Card className="p-5 sm:p-6">
-            <h2 className="font-bold text-slate-950">Transcript status</h2>
+          {generatedPlan ? (
+            <Card className="p-5 sm:p-6">
+              <div className="flex items-start gap-3">
+                <CheckCircle2
+                  className={
+                    generatedPlan.validation.isValid
+                      ? "mt-0.5 size-5 shrink-0 text-success-600"
+                      : "mt-0.5 size-5 shrink-0 text-danger-600"
+                  }
+                />
 
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Upload a transcript to replace sample data with your completed
-              coursework.
-            </p>
+                <div>
+                  <h2 className="font-bold text-text-primary">
+                    Plan validation
+                  </h2>
 
-            <Link href="/upload" className="mt-5 block">
-              <Button className="w-full">Upload transcript</Button>
-            </Link>
-          </Card>
+                  <p className="mt-1 text-sm leading-6 text-text-secondary">
+                    {generatedPlan.validation.isValid
+                      ? generatedPlan.validation.warningCount
+                        ? `${generatedPlan.validation.warningCount} warnings require review.`
+                        : "All plan checks passed."
+                      : `${generatedPlan.validation.errorCount} errors and ${generatedPlan.validation.warningCount} warnings detected.`}
+                  </p>
+                </div>
+              </div>
+
+              <Link href="/planner/generated" className="mt-5 block">
+                <Button variant="secondary" className="w-full">
+                  View validation details
+                </Button>
+              </Link>
+            </Card>
+          ) : null}
         </div>
       </div>
     </AppShell>

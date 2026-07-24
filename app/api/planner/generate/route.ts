@@ -1,27 +1,13 @@
 import { NextResponse } from "next/server"
-import { generateAcademicPlan } from "@/lib/planner/generate-plan"
-import type { StudentAcademicPlan } from "@/types/academic.type"
-import type { GeneratePlanOptions } from "@/types/planner.type"
-import type { TranscriptCourse } from "@/types/transcript.type"
+
 import { computerScienceBachelorProgram } from "@/data/degree.data"
+import { RequestValidationError } from "@/lib/api/request-validation-error"
+import { generateAcademicPlan } from "@/lib/planner/generate-plan"
+import { validateGeneratePlanRequest } from "@/lib/planner/validate-generate-plan-request"
+import type { StudentAcademicPlan } from "@/types/academic.type"
 
 /**
- * Expected request body for academic-plan generation.
- *
- * `transcriptCourses` contains the reviewed transcript data.
- * `options` is optional so callers can submit only the preferences
- * they want to override.
- */
-interface GeneratePlanRequest {
-  transcriptCourses: TranscriptCourse[]
-  options?: Partial<GeneratePlanOptions>
-}
-
-/**
- * Standard response shape returned by this endpoint.
- *
- * A successful response includes a generated plan.
- * Failed responses include a user-facing error message.
+ * Standard response returned by the plan-generation endpoint.
  */
 interface GeneratePlanResponse {
   success: boolean
@@ -30,102 +16,26 @@ interface GeneratePlanResponse {
 }
 
 /**
- * Fallback planner preferences used when the client does not submit
- * one or more scheduling options.
- */
-const defaultOptions: GeneratePlanOptions = {
-  startTerm: "fall",
-  startYear: 2027,
-  fallSpringCreditTarget: 12,
-  summerCreditTarget: 6,
-  includeSummer: true,
-}
-
-/**
- * Generates a deterministic academic plan from reviewed transcript courses.
- *
- * Processing flow:
- *
- * 1. Parse and validate the request body.
- * 2. Confirm that at least one passed course is included.
- * 3. Merge submitted preferences with server defaults.
- * 4. Generate the plan against the current generalized degree program.
- * 5. Return the completed plan to the client.
+ * Generates an academic plan from reviewed transcript data.
  */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<GeneratePlanResponse>> {
   try {
     /**
-     * The body is cast to the expected request type after parsing.
-     *
-     * The endpoint still performs runtime checks below because TypeScript
-     * types do not validate untrusted HTTP input.
+     * HTTP request data is untrusted until runtime validation succeeds.
      */
-    const body = (await request.json()) as GeneratePlanRequest
+    const body = (await request.json()) as unknown
 
-    /**
-     * Reject malformed requests that do not provide a transcript-course array.
-     */
-    if (!Array.isArray(body.transcriptCourses)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Transcript courses were not provided.",
-        },
-        {
-          status: 400,
-        },
-      )
+    if (typeof body !== "object" || body === null) {
+      throw new RequestValidationError("The request body is invalid.", 400)
     }
 
-    /**
-     * Only passed courses explicitly included by the user are eligible
-     * to satisfy degree requirements.
-     */
-    const includedCourses = body.transcriptCourses.filter(
-      (course) => course.completionStatus === "passed" && course.includedInPlan,
-    )
+    const { transcriptCourses, options } = validateGeneratePlanRequest(body)
 
-    /**
-     * Plan generation requires at least one eligible transcript course.
-     *
-     * This prevents generating a personalized plan from an empty or fully
-     * excluded transcript review.
-     */
-    if (!includedCourses.length) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Include at least one completed course before generating a plan.",
-        },
-        {
-          status: 422,
-        },
-      )
-    }
-
-    /**
-     * Merge client-selected preferences with server-side defaults.
-     *
-     * This keeps the API resilient when an older client omits newer options.
-     */
-    const options: GeneratePlanOptions = {
-      ...defaultOptions,
-      ...body.options,
-    }
-
-    /**
-     * Generate a complete semester-by-semester plan using the current
-     * generalized Computer Science bachelor's program.
-     *
-     * The planner is deterministic and should produce equivalent results
-     * for equivalent transcript data and scheduling preferences.
-     */
     const plan = generateAcademicPlan({
       program: computerScienceBachelorProgram,
-      transcriptCourses: body.transcriptCourses,
+      transcriptCourses,
       options,
     })
 
@@ -135,11 +45,20 @@ export async function POST(
     })
   } catch (error) {
     /**
-     * Log the original server error for development and observability.
-     *
-     * The client receives a generic message so internal implementation
-     * details are not exposed through the API response.
+     * Return validation failures without exposing internal server details.
      */
+    if (error instanceof RequestValidationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        {
+          status: error.status,
+        },
+      )
+    }
+
     console.error("Academic plan generation failed:", error)
 
     return NextResponse.json(
