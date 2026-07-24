@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { subjectOptions } from "@/data/subject-options"
 import type { SubjectArea } from "@/types/academic.type"
-import type { TranscriptCourse } from "@/types/transcript.type"
+import type {
+  TranscriptCompletionStatus,
+  TranscriptCourse,
+} from "@/types/transcript.type"
 
 /**
  * Props for one editable transcript course row.
@@ -36,7 +39,7 @@ export function TranscriptCourseCard({
 
   return (
     <Card className="p-4 sm:p-5">
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_120px_140px_auto] lg:items-end">
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_110px_140px_140px_auto] lg:items-end">
         <label className="grid gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
             Course
@@ -96,6 +99,31 @@ export function TranscriptCourseCard({
           />
         </label>
 
+        <label className="grid gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+            Status
+          </span>
+
+          <select
+            value={course.completionStatus}
+            onChange={(event) => {
+              const completionStatus = event.target
+                .value as TranscriptCompletionStatus
+
+              updateCourse({
+                completionStatus,
+                includedInPlan: completionStatus === "passed",
+              })
+            }}
+            className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100">
+            <option value="passed">Passed</option>
+            <option value="failed">Failed</option>
+            <option value="withdrawn">Withdrawn</option>
+            <option value="in_progress">In progress</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </label>
+
         <div className="grid gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
             Count toward plan
@@ -139,11 +167,21 @@ export function TranscriptCourseCard({
        * Shows the original extraction data for review and correction.
        */}
       <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3 text-xs text-text-tertiary">
-        <span>Original: {course.originalName}</span>
+        <span>
+          {course.source === "manual"
+            ? "Manually added"
+            : `Original: ${course.originalName}`}
+        </span>
 
         <span aria-hidden="true">•</span>
 
         <span>Status: {course.completionStatus.replaceAll("_", " ")}</span>
+
+        <span aria-hidden="true">•</span>
+
+        <span>
+          Source: {course.source === "manual" ? "Manual entry" : "Transcript"}
+        </span>
 
         <span aria-hidden="true">•</span>
 

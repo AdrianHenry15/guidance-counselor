@@ -20,6 +20,8 @@ import type {
   TranscriptAnalysis,
   TranscriptCourse,
 } from "@/types/transcript.type"
+import { createTranscriptCourse } from "@/lib/transcript/create-transcript-course"
+import { Plus } from "lucide-react"
 
 /**
  * Default scheduling preferences shown when the user first reaches
@@ -123,6 +125,25 @@ function ReviewContent({
   }
 
   /**
+   * Adds a blank course row for manual transcript entry.
+   */
+  function addCourse() {
+    const newCourse = createTranscriptCourse()
+
+    saveCourses([newCourse, ...analysis.courses])
+  }
+
+  // Manually Added courses on Transcript upload
+  const manuallyAddedCourses = analysis.courses.filter(
+    (course) => course.source === "manual",
+  )
+
+  // Extracted courses on Transcript upload
+  const extractedCourses = analysis.courses.filter(
+    (course) => course.source !== "manual",
+  )
+
+  /**
    * Counts only passed courses that are currently included in planning.
    */
   const includedCourseCount = calculateIncludedCourseCount(analysis.courses)
@@ -179,16 +200,72 @@ function ReviewContent({
          * Each detected course is editable and can be included, excluded,
          * corrected, or removed before plan generation.
          */}
-        <div className="space-y-4">
-          {analysis.courses.map((course) => (
-            <TranscriptCourseCard
-              key={course.id}
-              course={course}
-              onUpdate={updateCourse}
-              onRemove={removeCourse}
-            />
-          ))}
-        </div>
+        <section className="space-y-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-text-primary">
+                Reviewed courses
+              </h2>
+
+              <p className="mt-1 text-sm text-text-secondary">
+                Correct detected coursework or add any missing courses manually.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={addCourse}
+              disabled={isGenerating}>
+              <Plus className="size-4" />
+              Add course
+            </Button>
+          </div>
+
+          {manuallyAddedCourses.length > 0 ? (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-display text-base font-bold text-text-primary">
+                  Added courses
+                </h3>
+
+                <p className="mt-1 text-sm text-text-secondary">
+                  Courses you entered manually.
+                </p>
+              </div>
+
+              {manuallyAddedCourses.map((course) => (
+                <TranscriptCourseCard
+                  key={course.id}
+                  course={course}
+                  onUpdate={updateCourse}
+                  onRemove={removeCourse}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-display text-base font-bold text-text-primary">
+                Transcript courses
+              </h3>
+
+              <p className="mt-1 text-sm text-text-secondary">
+                Courses detected from your uploaded transcript.
+              </p>
+            </div>
+
+            {extractedCourses.map((course) => (
+              <TranscriptCourseCard
+                key={course.id}
+                course={course}
+                onUpdate={updateCourse}
+                onRemove={removeCourse}
+              />
+            ))}
+          </div>
+        </section>
       </div>
     </AppShell>
   )

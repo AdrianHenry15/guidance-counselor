@@ -51,7 +51,7 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length >= 4)
-    .map((line) => {
+    .map((line): TranscriptCourse => {
       const gradeMatch = line.match(gradePattern)
 
       const grade = gradeMatch?.[1]?.toUpperCase()
@@ -78,6 +78,7 @@ export function parseTranscriptText(text: string): TranscriptCourse[] {
         originalName: courseName,
         normalizedTitle: normalized.normalizedTitle,
         subjectArea: normalized.subjectArea,
+        source: "extracted",
         credits,
         grade,
         completionStatus,

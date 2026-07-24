@@ -1,5 +1,7 @@
 import type { EducationLevel, SubjectArea } from "@/types/academic.type"
 
+export type TranscriptCourseSource = "extracted" | "manual"
+
 export type TranscriptLineType =
   | "course"
   | "term_header"
@@ -23,16 +25,13 @@ export interface TranscriptCourse {
   subjectArea: SubjectArea
   credits: number
   grade?: string
-
-  completionStatus:
-    | "passed"
-    | "failed"
-    | "withdrawn"
-    | "in_progress"
-    | "unknown"
-
+  completionStatus: TranscriptCompletionStatus
   includedInPlan: boolean
+  institution?: string
+  term?: string
+  year?: string
   confidence: number
+  source?: TranscriptCourseSource
 }
 
 export interface TranscriptAnalysis {

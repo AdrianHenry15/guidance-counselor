@@ -46,6 +46,17 @@ export function useGenerateAcademicPlan({
     const includedCourses = getIncludedPassedCourses(analysis.courses)
 
     if (!includedCourses.length) {
+      const invalidCourses = includedCourses.filter(
+        (course) => !course.normalizedTitle.trim() || course.credits <= 0,
+      )
+
+      if (invalidCourses.length) {
+        setGenerationError(
+          "Every included course must have a title and a credit value greater than zero.",
+        )
+
+        return
+      }
       setGenerationError(
         "Include at least one passed course before generating your plan.",
       )
