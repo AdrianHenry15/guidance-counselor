@@ -120,6 +120,7 @@ export function generateAcademicPlan({
     programName: program.name,
     educationLevel: program.level,
     semesters,
+    completedCourseIds: [...completedCourseIdsBeforeScheduling],
     completedCredits,
     appliedCredits: appliedTranscriptCredits,
     totalPlannedCredits,

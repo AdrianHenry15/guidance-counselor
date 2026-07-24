@@ -21,6 +21,7 @@ interface AcademicPlanContextValue {
   setTranscriptAnalysis: (analysis: TranscriptAnalysis) => void
 
   updateTranscriptAnalysis: (analysis: TranscriptAnalysis) => void
+  updateGeneratedPlan: (plan: StudentAcademicPlan) => void
 
   setGeneratedPlan: (plan: StudentAcademicPlan) => void
 
@@ -92,6 +93,13 @@ export function AcademicPlanProvider({
   }, [])
 
   /**
+   * Replaces the current plan after a user edit.
+   */
+  const updateGeneratedPlan = useCallback((plan: StudentAcademicPlan) => {
+    setPlan(plan)
+  }, [])
+
+  /**
    * Memoizes the context value to avoid unnecessary consumer updates.
    */
   const value = useMemo(
@@ -100,6 +108,7 @@ export function AcademicPlanProvider({
       generatedPlan,
       setTranscriptAnalysis,
       updateTranscriptAnalysis,
+      updateGeneratedPlan,
       setGeneratedPlan,
       clearTranscriptAnalysis,
       clearGeneratedPlan,
@@ -110,6 +119,7 @@ export function AcademicPlanProvider({
       generatedPlan,
       setTranscriptAnalysis,
       updateTranscriptAnalysis,
+      updateGeneratedPlan,
       setGeneratedPlan,
       clearTranscriptAnalysis,
       clearGeneratedPlan,

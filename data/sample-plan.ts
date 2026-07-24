@@ -13,6 +13,7 @@ export const sampleAcademicPlan: StudentAcademicPlan = {
   programName: "Bachelor's Degree in Computer Science",
   educationLevel: "college",
   transcriptAllocations: [],
+  completedCourseIds: [],
   degreeAudit: {
     programId: "bachelor-computer-science",
     programName: "Bachelor's Degree in Computer Science",

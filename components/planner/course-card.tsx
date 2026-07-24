@@ -1,14 +1,20 @@
 import type { PlannedCourse } from "@/types/academic.type"
-import { BookOpen, Clock } from "lucide-react"
+import { ArrowDown, ArrowUp, BookOpen, Clock } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { courseStatusBadge } from "@/components/ui/badge.config"
+import { Button } from "../ui/button"
 
 /**
  * Props for one planned course card.
  */
 interface CourseCardProps {
   course: PlannedCourse
+  canMoveEarlier?: boolean
+  canMoveLater?: boolean
+  editable?: boolean
+  onMoveEarlier?: () => void
+  onMoveLater?: () => void
 }
 
 /**
@@ -34,7 +40,14 @@ const subjectLabels: Record<PlannedCourse["subjectArea"], string> = {
 /**
  * Displays one course within a planned semester.
  */
-export function CourseCard({ course }: CourseCardProps) {
+export function CourseCard({
+  course,
+  canMoveEarlier,
+  editable = false,
+  canMoveLater,
+  onMoveEarlier,
+  onMoveLater,
+}: CourseCardProps) {
   return (
     <article className="relative overflow-hidden rounded-xl border border-border bg-surface p-4 text-text-primary shadow-xs">
       <div className="absolute inset-y-0 left-0 w-1 bg-(image:--gradient-progress)" />
@@ -68,9 +81,57 @@ export function CourseCard({ course }: CourseCardProps) {
             </div>
           </div>
 
-          <p className="mt-3 text-sm leading-6 text-text-secondary">
-            {course.description}
-          </p>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Move ${course.title} to the previous semester`}
+              disabled={!canMoveEarlier}
+              onClick={onMoveEarlier}>
+              <ArrowUp className="size-4" />
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Move ${course.title} to the next semester`}
+              disabled={!canMoveLater}
+              onClick={onMoveLater}>
+              <ArrowDown className="size-4" />
+            </Button>
+          </div>
+
+          {course.description ? (
+            <p className="mt-2 text-sm leading-6 text-text-secondary">
+              {course.description}
+            </p>
+          ) : null}
+
+          {editable ? (
+            <div className="flex shrink-0 items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Move ${course.title} to the previous semester`}
+                disabled={!canMoveEarlier}
+                onClick={onMoveEarlier}>
+                <ArrowUp className="size-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Move ${course.title} to the next semester`}
+                disabled={!canMoveLater}
+                onClick={onMoveLater}>
+                <ArrowDown className="size-4" />
+              </Button>
+            </div>
+          ) : null}
 
           {course.prerequisites?.length ? (
             <p className="mt-3 text-xs text-text-tertiary">

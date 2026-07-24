@@ -1,5 +1,3 @@
-// app/(application)/planner/generated/page.tsx
-
 "use client"
 
 import {
@@ -19,15 +17,17 @@ import { Card } from "@/components/ui/card"
 import { PlanValidationSummary } from "@/components/planner/plan-validation-summary"
 import { CreditAllocationSummary } from "@/components/planner/credit-allocation-summary"
 import { DegreeAuditSummary } from "@/components/planner/degree-audit-summary"
+import { moveCourseInPlan } from "@/lib/planner/edit-academic-plan"
+import { useState } from "react"
 
 /**
  * Displays the personalized academic plan generated from the user's reviewed
  * transcript and selected scheduling preferences.
  *
- * The plan is read from shared in-memory context, so this page depends on the
- * user completing the upload and review workflow during the current session.
+ * The plan is stored in shared client state and resets after a full refresh.
  */
 export default function GeneratedPlanPage() {
+  const [editError, setEditError] = useState("")
   const router = useRouter()
 
   /**
@@ -36,7 +36,52 @@ export default function GeneratedPlanPage() {
    * `transcriptAnalysis` is used only to determine where the user should be
    * redirected when no generated plan is currently available.
    */
-  const { generatedPlan, transcriptAnalysis } = useAcademicPlan()
+  const { generatedPlan, transcriptAnalysis, updateGeneratedPlan } =
+    useAcademicPlan()
+
+  /**
+   * Moves a course to an adjacent semester and reruns validation.
+   */
+  function handleMoveCourse(
+    sourceSemesterIndex: number,
+    courseId: string,
+    direction: "earlier" | "later",
+  ) {
+    if (!generatedPlan) {
+      return
+    }
+
+    const targetSemesterIndex =
+      direction === "earlier"
+        ? sourceSemesterIndex - 1
+        : sourceSemesterIndex + 1
+
+    const sourceSemester = generatedPlan.semesters[sourceSemesterIndex]
+
+    const targetSemester = generatedPlan.semesters[targetSemesterIndex]
+
+    if (!sourceSemester || !targetSemester) {
+      return
+    }
+
+    try {
+      const updatedPlan = moveCourseInPlan({
+        plan: generatedPlan,
+        courseId,
+        sourceSemesterId: sourceSemester.id,
+        targetSemesterId: targetSemester.id,
+      })
+
+      setEditError("")
+      updateGeneratedPlan(updatedPlan)
+    } catch (error) {
+      setEditError(
+        error instanceof Error
+          ? error.message
+          : "The course could not be moved.",
+      )
+    }
+  }
 
   /**
    * Show a recovery state when the user opens this route without generating
@@ -115,7 +160,7 @@ export default function GeneratedPlanPage() {
               </Badge>
 
               <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-brand-on-surface sm:text-3xl">
-                Bachelor&apos;s Degree in Computer Science
+                {generatedPlan.programName}
               </h2>
 
               <p className="mt-3 max-w-xl text-sm leading-6 text-brand-on-surface-muted">
@@ -169,9 +214,12 @@ export default function GeneratedPlanPage() {
               </div>
 
               <p className="mt-2 text-sm text-text-secondary">
-                {generatedPlan.completedCredits} earned +{" "}
-                {generatedPlan.totalPlannedCredits} planned ={" "}
-                {totalProgramCredits} mapped credits
+                {generatedPlan.completedCredits} credits earned ·{" "}
+                {generatedPlan.appliedCredits} applied to this degree ·{" "}
+                {generatedPlan.totalPlannedCredits} remaining
+              </p>
+              <p className="mt-1 text-xs text-text-tertiary">
+                {totalProgramCredits} total degree credits mapped
               </p>
             </div>
 
@@ -191,6 +239,14 @@ export default function GeneratedPlanPage() {
           allocations={generatedPlan.transcriptAllocations}
         />
 
+        {editError ? (
+          <div
+            role="alert"
+            className="rounded-2xl border border-danger-500/30 bg-danger-500/10 p-4 text-sm text-danger-700 dark:text-red-300">
+            {editError}
+          </div>
+        ) : null}
+
         {/*
          * Shows deterministic validation results for prerequisite order,
          * duplicate courses, credit overloads, and mapped-credit integrity.
@@ -201,8 +257,17 @@ export default function GeneratedPlanPage() {
          * Render the generated semesters in chronological order.
          */}
         <div className="space-y-5">
-          {generatedPlan.semesters.map((semester) => (
-            <SemesterCard key={semester.id} semester={semester} />
+          {generatedPlan.semesters.map((semester, semesterIndex) => (
+            <SemesterCard
+              key={semester.id}
+              semester={semester}
+              semesterIndex={semesterIndex}
+              semesterCount={generatedPlan.semesters.length}
+              editable
+              onMoveCourse={(courseId, direction) =>
+                handleMoveCourse(semesterIndex, courseId, direction)
+              }
+            />
           ))}
         </div>
 

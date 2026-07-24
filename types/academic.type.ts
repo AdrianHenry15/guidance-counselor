@@ -65,12 +65,13 @@ export interface StudentAcademicPlan {
   programName: string
   educationLevel: EducationLevel
   semesters: PlannedSemester[]
+  completedCourseIds: string[]
   completedCredits: number
   appliedCredits: number
   totalPlannedCredits: number
-  estimatedGraduation?: string
+  transcriptAllocations: TranscriptCreditAllocation[]
   degreeAudit: DegreeAudit
+  estimatedGraduation?: string
   generatedAt: string
   validation: PlanValidationResult
-  transcriptAllocations: TranscriptCreditAllocation[]
 }

@@ -9,12 +9,22 @@ import { Card } from "@/components/ui/card"
  */
 interface SemesterCardProps {
   semester: PlannedSemester
+  semesterIndex?: number
+  semesterCount?: number
+  editable?: boolean
+  onMoveCourse?: (courseId: string, direction: "earlier" | "later") => void
 }
 
 /**
  * Displays a semester summary and its planned courses.
  */
-export function SemesterCard({ semester }: SemesterCardProps) {
+export function SemesterCard({
+  semester,
+  semesterIndex,
+  semesterCount,
+  editable = false,
+  onMoveCourse,
+}: SemesterCardProps) {
   const totalCredits = semester.courses.reduce(
     (total, course) => total + course.credits,
     0,
@@ -50,10 +60,37 @@ export function SemesterCard({ semester }: SemesterCardProps) {
       {/*
        * Render each course scheduled for this semester.
        */}
-      <div className="grid gap-3 bg-surface p-4 sm:p-5">
-        {semester.courses.map((course) => (
-          <CourseCard key={course.id} course={course} />
-        ))}
+      <div className="space-y-3 p-5 sm:p-6">
+        {semester.courses.map((course) => {
+          const canMoveEarlier =
+            editable && semesterIndex !== undefined && semesterIndex > 0
+
+          const canMoveLater =
+            editable &&
+            semesterIndex !== undefined &&
+            semesterCount !== undefined &&
+            semesterIndex < semesterCount - 1
+
+          return (
+            <CourseCard
+              key={course.id}
+              course={course}
+              editable={editable}
+              canMoveEarlier={canMoveEarlier}
+              canMoveLater={canMoveLater}
+              onMoveEarlier={
+                editable && onMoveCourse
+                  ? () => onMoveCourse(course.id, "earlier")
+                  : undefined
+              }
+              onMoveLater={
+                editable && onMoveCourse
+                  ? () => onMoveCourse(course.id, "later")
+                  : undefined
+              }
+            />
+          )
+        })}
       </div>
     </Card>
   )
