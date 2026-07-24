@@ -2,17 +2,26 @@
 
 import type { GeneratePlanOptions } from "@/types/planner.type"
 
+/**
+ * Configurable scheduling preferences for plan generation.
+ */
 interface PlanningPreferencesProps {
   value: GeneratePlanOptions
   onChange: (options: GeneratePlanOptions) => void
   disabled?: boolean
 }
 
+/**
+ * Collects term, year, and credit-load preferences.
+ */
 export function PlanningPreferences({
   value,
   onChange,
   disabled = false,
 }: PlanningPreferencesProps) {
+  /**
+   * Merges a partial preference update into the current options.
+   */
   function updateOptions(updates: Partial<GeneratePlanOptions>) {
     onChange({
       ...value,
@@ -112,6 +121,9 @@ export function PlanningPreferences({
           Summer credits
         </span>
 
+        {/*
+         * Summer credit selection is unavailable when summer terms are skipped.
+         */}
         <select
           value={value.summerCreditTarget}
           disabled={disabled || !value.includeSummer}

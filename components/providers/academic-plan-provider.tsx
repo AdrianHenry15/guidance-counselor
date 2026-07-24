@@ -11,6 +11,9 @@ import {
 import type { StudentAcademicPlan } from "@/types/academic.type"
 import type { TranscriptAnalysis } from "@/types/transcript.type"
 
+/**
+ * Shared transcript and generated-plan state.
+ */
 interface AcademicPlanContextValue {
   transcriptAnalysis: TranscriptAnalysis | null
   generatedPlan: StudentAcademicPlan | null
@@ -28,6 +31,9 @@ interface AcademicPlanContextValue {
 
 const AcademicPlanContext = createContext<AcademicPlanContextValue | null>(null)
 
+/**
+ * Provides in-memory academic planning state across client routes.
+ */
 export function AcademicPlanProvider({
   children,
 }: {
@@ -39,6 +45,9 @@ export function AcademicPlanProvider({
 
   const [generatedPlan, setPlan] = useState<StudentAcademicPlan | null>(null)
 
+  /**
+   * Stores a new transcript and invalidates the previous plan.
+   */
   const setTranscriptAnalysis = useCallback((analysis: TranscriptAnalysis) => {
     setAnalysis(analysis)
 
@@ -46,6 +55,9 @@ export function AcademicPlanProvider({
     setPlan(null)
   }, [])
 
+  /**
+   * Saves transcript edits and marks the generated plan as stale.
+   */
   const updateTranscriptAnalysis = useCallback(
     (analysis: TranscriptAnalysis) => {
       setAnalysis(analysis)
@@ -56,6 +68,9 @@ export function AcademicPlanProvider({
     [],
   )
 
+  /**
+   * Stores the latest generated academic plan.
+   */
   const setGeneratedPlan = useCallback((plan: StudentAcademicPlan) => {
     setPlan(plan)
   }, [])
@@ -68,11 +83,17 @@ export function AcademicPlanProvider({
     setPlan(null)
   }, [])
 
+  /**
+   * Clears the entire planning workflow.
+   */
   const clearAcademicPlan = useCallback(() => {
     setAnalysis(null)
     setPlan(null)
   }, [])
 
+  /**
+   * Memoizes the context value to avoid unnecessary consumer updates.
+   */
   const value = useMemo(
     () => ({
       transcriptAnalysis,
@@ -103,6 +124,9 @@ export function AcademicPlanProvider({
   )
 }
 
+/**
+ * Returns the academic-plan context for client components.
+ */
 export function useAcademicPlan() {
   const context = useContext(AcademicPlanContext)
 

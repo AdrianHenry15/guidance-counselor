@@ -1,7 +1,13 @@
+/**
+ * Warning messages produced during transcript extraction or parsing.
+ */
 interface TranscriptWarningsProps {
   warnings: string[]
 }
 
+/**
+ * Displays non-fatal transcript analysis warnings.
+ */
 export function TranscriptWarnings({ warnings }: TranscriptWarningsProps) {
   if (!warnings.length) {
     return null

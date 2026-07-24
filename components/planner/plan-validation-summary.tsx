@@ -6,10 +6,16 @@ import type {
   PlanValidationResult,
 } from "@/types/plan-validation.type"
 
+/**
+ * Validation data displayed for a generated plan.
+ */
 interface PlanValidationSummaryProps {
   validation: PlanValidationResult
 }
 
+/**
+ * Displays one validation error or warning.
+ */
 function ValidationIssueRow({ issue }: { issue: PlanValidationIssue }) {
   const isError = issue.severity === "error"
 
@@ -40,6 +46,9 @@ function ValidationIssueRow({ issue }: { issue: PlanValidationIssue }) {
   )
 }
 
+/**
+ * Displays the overall plan-validation result and any detected issues.
+ */
 export function PlanValidationSummary({
   validation,
 }: PlanValidationSummaryProps) {

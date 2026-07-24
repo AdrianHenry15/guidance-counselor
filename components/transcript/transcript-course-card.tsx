@@ -8,12 +8,18 @@ import { subjectOptions } from "@/data/subject-options"
 import type { SubjectArea } from "@/types/academic.type"
 import type { TranscriptCourse } from "@/types/transcript.type"
 
+/**
+ * Props for one editable transcript course row.
+ */
 interface TranscriptCourseCardProps {
   course: TranscriptCourse
   onUpdate: (courseId: string, updates: Partial<TranscriptCourse>) => void
   onRemove: (courseId: string) => void
 }
 
+/**
+ * Displays and edits one detected transcript course.
+ */
 export function TranscriptCourseCard({
   course,
   onUpdate,
@@ -21,6 +27,9 @@ export function TranscriptCourseCard({
 }: TranscriptCourseCardProps) {
   const isPassed = course.completionStatus === "passed"
 
+  /**
+   * Applies a partial update to the current course.
+   */
   function updateCourse(updates: Partial<TranscriptCourse>) {
     onUpdate(course.id, updates)
   }
@@ -126,6 +135,9 @@ export function TranscriptCourseCard({
         </Button>
       </div>
 
+      {/*
+       * Shows the original extraction data for review and correction.
+       */}
       <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3 text-xs text-text-tertiary">
         <span>Original: {course.originalName}</span>
 

@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
+/**
+ * Summary data and actions for the transcript review page.
+ */
 interface TranscriptReviewSummaryProps {
   fileName: string
   detectedCourseCount: number
@@ -11,6 +14,9 @@ interface TranscriptReviewSummaryProps {
   onGenerate: () => void
 }
 
+/**
+ * Displays transcript totals and the plan-generation action.
+ */
 export function TranscriptReviewSummary({
   fileName,
   detectedCourseCount,
@@ -34,6 +40,9 @@ export function TranscriptReviewSummary({
           </p>
         </div>
 
+        {/*
+         * Plan generation is disabled until at least one course is included.
+         */}
         <Button
           onClick={onGenerate}
           disabled={!includedCourseCount}
@@ -43,6 +52,9 @@ export function TranscriptReviewSummary({
         </Button>
       </div>
 
+      {/*
+       * Displays client-side or API generation errors.
+       */}
       {generationError ? (
         <p className="mt-4 text-sm font-medium text-danger-600">
           {generationError}

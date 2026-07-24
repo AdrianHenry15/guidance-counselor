@@ -9,17 +9,25 @@ import type { StudentAcademicPlan } from "@/types/academic.type"
 import type { GeneratePlanOptions } from "@/types/planner.type"
 import type { TranscriptAnalysis } from "@/types/transcript.type"
 
+/**
+ * Inputs required to generate a plan from reviewed transcript data.
+ */
 interface UseGenerateAcademicPlanArguments {
   analysis: TranscriptAnalysis
   options: GeneratePlanOptions
 }
-
+/**
+ * Expected response from the plan-generation API.
+ */
 interface GeneratePlanResponse {
   success: boolean
   plan?: StudentAcademicPlan
   error?: string
 }
 
+/**
+ * Handles plan generation, loading state, errors, storage, and navigation.
+ */
 export function useGenerateAcademicPlan({
   analysis,
   options,
@@ -32,6 +40,9 @@ export function useGenerateAcademicPlan({
   const [generationError, setGenerationError] = useState("")
 
   async function generatePlan() {
+    /**
+     * Prevent generation without at least one eligible course.
+     */
     const includedCourses = getIncludedPassedCourses(analysis.courses)
 
     if (!includedCourses.length) {
@@ -63,6 +74,9 @@ export function useGenerateAcademicPlan({
         throw new Error(result.error ?? "Academic plan generation failed.")
       }
 
+      /**
+       * Store the generated plan before opening the results page.
+       */
       setGeneratedPlan(result.plan)
       router.push("/planner/generated")
     } catch (error) {

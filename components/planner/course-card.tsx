@@ -4,10 +4,16 @@ import { BookOpen, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { courseStatusBadge } from "@/components/ui/badge.config"
 
+/**
+ * Props for one planned course card.
+ */
 interface CourseCardProps {
   course: PlannedCourse
 }
 
+/**
+ * Human-readable labels for subject-area values.
+ */
 const subjectLabels: Record<PlannedCourse["subjectArea"], string> = {
   english: "English",
   mathematics: "Mathematics",
@@ -25,10 +31,13 @@ const subjectLabels: Record<PlannedCourse["subjectArea"], string> = {
   college_success: "College Success",
 }
 
+/**
+ * Displays one course within a planned semester.
+ */
 export function CourseCard({ course }: CourseCardProps) {
   return (
     <article className="relative overflow-hidden rounded-xl border border-border bg-surface p-4 text-text-primary shadow-xs">
-      <div className="absolute inset-y-0 left-0 w-1 bg-[image:var(--gradient-progress)]" />
+      <div className="absolute inset-y-0 left-0 w-1 bg-(image:--gradient-progress)" />
 
       <div className="flex items-start gap-3 pl-2">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-subtle text-primary">
