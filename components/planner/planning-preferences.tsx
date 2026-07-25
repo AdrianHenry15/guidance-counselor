@@ -2,6 +2,8 @@
 
 import { academicPrograms } from "@/data/program"
 import type { GeneratePlanOptions, PriorCredential } from "@/types/planner.type"
+import { Select } from "../ui/select"
+import { NumberInput } from "../ui/number-input"
 
 /**
  * Prior credentials supported by the generalized V1 workflow.
@@ -28,9 +30,6 @@ const priorCredentialOptions: Array<{
   },
 ]
 
-/**
- * Configurable scheduling preferences for plan generation.
- */
 interface PlanningPreferencesProps {
   value: GeneratePlanOptions
   onChange: (options: GeneratePlanOptions) => void
@@ -38,15 +37,22 @@ interface PlanningPreferencesProps {
 }
 
 /**
- * Collects term, year, and credit-load preferences.
+ * Shared styling for planning form controls.
+ */
+const controlClassName =
+  "min-h-11 w-full appearance-none rounded-xl border border-border-strong bg-surface py-2 pl-3 pr-10 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-subtle disabled:cursor-not-allowed disabled:opacity-60"
+/**
+ * Collects program, credential, term, year, and credit-load preferences.
  */
 export function PlanningPreferences({
   value,
   onChange,
   disabled = false,
 }: PlanningPreferencesProps) {
+  const currentYear = new Date().getFullYear()
+
   /**
-   * Merges a partial preference update into the current options.
+   * Merges a partial update into the current preferences.
    */
   function updateOptions(updates: Partial<GeneratePlanOptions>) {
     onChange({
@@ -55,15 +61,28 @@ export function PlanningPreferences({
     })
   }
 
+  /**
+   * Disables summer and corrects an invalid summer start term.
+   */
+  function updateSummerPreference(includeSummer: boolean) {
+    updateOptions({
+      includeSummer,
+      startTerm:
+        !includeSummer && value.startTerm === "summer"
+          ? "fall"
+          : value.startTerm,
+    })
+  }
+
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-6">
-      {/* Academic Program */}
-      <label className="grid gap-1.5">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      {/* Academic program */}
+      <label className="grid min-w-0 gap-1.5 md:col-span-2">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Academic program
         </span>
 
-        <select
+        <Select
           value={value.programId}
           disabled={disabled}
           onChange={(event) =>
@@ -71,52 +90,55 @@ export function PlanningPreferences({
               programId: event.target.value,
             })
           }
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60">
+          className={controlClassName}>
           {academicPrograms.map((program) => (
             <option key={program.id} value={program.id}>
               {program.name}
             </option>
           ))}
-        </select>
-      </label>
-      {/* Prior Degree */}
-      <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-          Prior degree
-        </span>
-
-        <select
-          value={value.priorCredential}
-          disabled={disabled}
-          onChange={(event) =>
-            updateOptions({
-              priorCredential: event.target.value as PriorCredential,
-            })
-          }
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-subtle disabled:cursor-not-allowed disabled:opacity-60">
-          {priorCredentialOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        </Select>
       </label>
 
-      {value.priorCredential !== "none" ? (
-        <p className="text-xs leading-5 text-text-tertiary">
-          Completed courses will be evaluated individually. Credential-level
-          waivers vary by institution and are not automatically applied in this
-          version.
-        </p>
-      ) : null}
+      {/* Prior degree */}
+      <div className="grid min-w-0 gap-1.5 md:col-span-2">
+        <label className="grid gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+            Prior degree
+          </span>
 
-      {/* Starting Term */}
-      <label className="grid gap-1.5">
+          <Select
+            value={value.priorCredential}
+            disabled={disabled}
+            onChange={(event) =>
+              updateOptions({
+                priorCredential: event.target.value as PriorCredential,
+              })
+            }
+            className={controlClassName}>
+            {priorCredentialOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </label>
+
+        {value.priorCredential !== "none" ? (
+          <p className="text-xs leading-5 text-text-tertiary">
+            Completed courses will be evaluated individually. Credential-level
+            waivers vary by institution and are not automatically applied in
+            this version.
+          </p>
+        ) : null}
+      </div>
+
+      {/* Starting term */}
+      <label className="grid min-w-0 gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Starting term
         </span>
 
-        <select
+        <Select
           value={value.startTerm}
           disabled={disabled}
           onChange={(event) =>
@@ -124,43 +146,45 @@ export function PlanningPreferences({
               startTerm: event.target.value as GeneratePlanOptions["startTerm"],
             })
           }
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60">
+          className={controlClassName}>
           <option value="fall">Fall</option>
           <option value="spring">Spring</option>
-          <option value="summer">Summer</option>
-        </select>
+          <option value="summer" disabled={!value.includeSummer}>
+            Summer
+          </option>
+        </Select>
       </label>
-      {/* Starting Year */}
-      <label className="grid gap-1.5">
+
+      {/* Starting year */}
+      <label className="grid min-w-0 gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Starting year
         </span>
 
-        <input
-          type="number"
-          min={new Date().getFullYear()}
-          max={new Date().getFullYear() + 10}
+        <NumberInput
+          min={currentYear}
+          max={currentYear + 10}
           value={value.startYear}
           disabled={disabled}
           onChange={(event) => {
-            const startYear = Number(event.target.value)
+            const startYear = event.currentTarget.valueAsNumber
 
-            updateOptions({
-              startYear: Number.isFinite(startYear)
-                ? startYear
-                : new Date().getFullYear(),
-            })
+            if (Number.isInteger(startYear)) {
+              updateOptions({
+                startYear,
+              })
+            }
           }}
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60"
         />
       </label>
 
-      <label className="grid gap-1.5">
+      {/* Fall and spring credits */}
+      <label className="grid min-w-0 gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Fall/Spring credits
         </span>
 
-        <select
+        <Select
           value={value.fallSpringCreditTarget}
           disabled={disabled}
           onChange={(event) =>
@@ -168,43 +192,40 @@ export function PlanningPreferences({
               fallSpringCreditTarget: Number(event.target.value),
             })
           }
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60">
+          className={controlClassName}>
           <option value={6}>6 credits</option>
           <option value={9}>9 credits</option>
           <option value={12}>12 credits</option>
           <option value={15}>15 credits</option>
           <option value={18}>18 credits</option>
-        </select>
+        </Select>
       </label>
 
-      <label className="grid gap-1.5">
+      {/* Summer preference */}
+      <label className="grid min-w-0 gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Summer courses
         </span>
 
-        <select
+        <Select
           value={value.includeSummer ? "yes" : "no"}
           disabled={disabled}
           onChange={(event) =>
-            updateOptions({
-              includeSummer: event.target.value === "yes",
-            })
+            updateSummerPreference(event.target.value === "yes")
           }
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60">
+          className={controlClassName}>
           <option value="yes">Include summer</option>
           <option value="no">Skip summer</option>
-        </select>
+        </Select>
       </label>
 
-      <label className="grid gap-1.5">
+      {/* Summer credits */}
+      <label className="grid min-w-0 gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Summer credits
         </span>
 
-        {/*
-         * Summer credit selection is unavailable when summer terms are skipped.
-         */}
-        <select
+        <Select
           value={value.summerCreditTarget}
           disabled={disabled || !value.includeSummer}
           onChange={(event) =>
@@ -212,11 +233,11 @@ export function PlanningPreferences({
               summerCreditTarget: Number(event.target.value),
             })
           }
-          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60">
+          className={controlClassName}>
           <option value={3}>3 credits</option>
           <option value={6}>6 credits</option>
           <option value={9}>9 credits</option>
-        </select>
+        </Select>
       </label>
     </div>
   )

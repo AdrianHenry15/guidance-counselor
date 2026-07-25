@@ -10,6 +10,7 @@ import type {
   TranscriptCompletionStatus,
   TranscriptCourse,
 } from "@/types/transcript.type"
+import { Select } from "../ui/select"
 
 /**
  * Props for one editable transcript course row.
@@ -61,7 +62,7 @@ export function TranscriptCourseCard({
             Subject
           </span>
 
-          <select
+          <Select
             value={course.subjectArea}
             onChange={(event) =>
               updateCourse({
@@ -74,7 +75,7 @@ export function TranscriptCourseCard({
                 {subject.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
 
         <label className="grid gap-1.5">
@@ -104,7 +105,7 @@ export function TranscriptCourseCard({
             Status
           </span>
 
-          <select
+          <Select
             value={course.completionStatus}
             onChange={(event) => {
               const completionStatus = event.target
@@ -121,7 +122,7 @@ export function TranscriptCourseCard({
             <option value="withdrawn">Withdrawn</option>
             <option value="in_progress">In progress</option>
             <option value="unknown">Unknown</option>
-          </select>
+          </Select>
         </label>
 
         <div className="grid gap-1.5">
