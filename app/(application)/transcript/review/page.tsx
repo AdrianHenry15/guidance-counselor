@@ -32,6 +32,7 @@ import { Plus } from "lucide-react"
  */
 const defaultPlanOptions: GeneratePlanOptions = {
   programId: "bachelor-computer-science",
+  priorCredential: "none",
   startTerm: "fall",
   startYear: 2027,
   fallSpringCreditTarget: 12,

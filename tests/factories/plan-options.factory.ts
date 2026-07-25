@@ -9,6 +9,7 @@ export function createPlanOptions(
 ): GeneratePlanOptions {
   return {
     programId: computerScienceBachelorProgram.id,
+    priorCredential: "none",
     startTerm: "fall",
     startYear: 2027,
     fallSpringCreditTarget: 12,

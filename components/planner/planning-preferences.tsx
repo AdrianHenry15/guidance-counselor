@@ -1,7 +1,32 @@
 "use client"
 
 import { academicPrograms } from "@/data/program"
-import type { GeneratePlanOptions } from "@/types/planner.type"
+import type { GeneratePlanOptions, PriorCredential } from "@/types/planner.type"
+
+/**
+ * Prior credentials supported by the generalized V1 workflow.
+ */
+const priorCredentialOptions: Array<{
+  value: PriorCredential
+  label: string
+}> = [
+  {
+    value: "none",
+    label: "No completed college degree",
+  },
+  {
+    value: "associate",
+    label: "Associate degree",
+  },
+  {
+    value: "bachelor",
+    label: "Bachelor’s degree",
+  },
+  {
+    value: "other",
+    label: "Other credential",
+  },
+]
 
 /**
  * Configurable scheduling preferences for plan generation.
@@ -32,6 +57,7 @@ export function PlanningPreferences({
 
   return (
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-6">
+      {/* Academic Program */}
       <label className="grid gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Academic program
@@ -53,6 +79,38 @@ export function PlanningPreferences({
           ))}
         </select>
       </label>
+      {/* Prior Degree */}
+      <label className="grid gap-1.5">
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+          Prior degree
+        </span>
+
+        <select
+          value={value.priorCredential}
+          disabled={disabled}
+          onChange={(event) =>
+            updateOptions({
+              priorCredential: event.target.value as PriorCredential,
+            })
+          }
+          className="min-h-11 rounded-xl border border-border-strong bg-surface px-3 text-sm text-text-primary outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-subtle disabled:cursor-not-allowed disabled:opacity-60">
+          {priorCredentialOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {value.priorCredential !== "none" ? (
+        <p className="text-xs leading-5 text-text-tertiary">
+          Completed courses will be evaluated individually. Credential-level
+          waivers vary by institution and are not automatically applied in this
+          version.
+        </p>
+      ) : null}
+
+      {/* Starting Term */}
       <label className="grid gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Starting term
@@ -72,7 +130,7 @@ export function PlanningPreferences({
           <option value="summer">Summer</option>
         </select>
       </label>
-
+      {/* Starting Year */}
       <label className="grid gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
           Starting year

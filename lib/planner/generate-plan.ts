@@ -118,6 +118,7 @@ export function generateAcademicPlan({
     studentId: "local-student",
     programId: program.id,
     programName: program.name,
+    priorCredential: options.priorCredential,
     educationLevel: program.level,
     semesters,
     completedCourseIds: [...completedCourseIdsBeforeScheduling],

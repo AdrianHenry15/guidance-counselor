@@ -7,6 +7,7 @@ import { createTranscriptCourse } from "@/tests/factories/transcript-course.fact
 
 const options: GeneratePlanOptions = {
   programId: computerScienceBachelorProgram.id,
+  priorCredential: "none",
   startTerm: "fall",
   startYear: 2027,
   fallSpringCreditTarget: 12,

@@ -11,6 +11,7 @@ export const sampleAcademicPlan: StudentAcademicPlan = {
   studentId: "sample-student",
   programId: "bachelor-computer-science",
   programName: "Bachelor's Degree in Computer Science",
+  priorCredential: "none",
   educationLevel: "college",
   transcriptAllocations: [],
   completedCourseIds: [],

@@ -21,6 +21,7 @@ import { DegreeAuditSummary } from "@/components/planner/degree-audit-summary"
 import { moveCourseInPlan } from "@/lib/planner/edit-academic-plan"
 import { useState } from "react"
 import { hasPlanEdits } from "@/lib/planner/has-plan-edits"
+import { PriorCredentialAdvisory } from "@/components/planner/prior-credential-advisory"
 
 /**
  * Displays the personalized academic plan generated from the user's reviewed
@@ -271,6 +272,8 @@ export default function GeneratedPlanPage() {
             </div>
           </div>
         </Card>
+
+        <PriorCredentialAdvisory credential={generatedPlan.priorCredential} />
 
         <DegreeAuditSummary audit={generatedPlan.degreeAudit} />
 
