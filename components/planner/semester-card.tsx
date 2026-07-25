@@ -1,13 +1,11 @@
-import type { PlannedSemester } from "@/types/academic.type"
 import { AlertTriangle, CalendarDays } from "lucide-react"
 
 import { CourseCard } from "@/components/planner/course-card"
 import { Card } from "@/components/ui/card"
-import { PlanValidationIssue } from "@/types/plan-validation.type"
+import { cn } from "@/lib/utils"
+import type { PlannedSemester } from "@/types/academic.type"
+import type { PlanValidationIssue } from "@/types/plan-validation.type"
 
-/**
- * Props for one planned semester.
- */
 interface SemesterCardProps {
   semester: PlannedSemester
   semesterIndex?: number
@@ -18,7 +16,7 @@ interface SemesterCardProps {
 }
 
 /**
- * Displays a semester summary and its planned courses.
+ * Displays one semester, its courses, and associated validation issues.
  */
 export function SemesterCard({
   semester,
@@ -34,15 +32,12 @@ export function SemesterCard({
   )
 
   /**
-   * Semester issues are not associated with one specific course.
+   * Semester issues have no specific course association.
    */
   const semesterIssues = validationIssues.filter((issue) => !issue.courseId)
 
   return (
     <Card className="overflow-hidden">
-      {/*
-       * Semester header with term details and total scheduled credits.
-       */}
       <div className="flex flex-col gap-4 border-b border-border bg-surface-subtle p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-(image:--gradient-primary) text-brand-on-surface shadow-sm">
@@ -55,7 +50,8 @@ export function SemesterCard({
             </h2>
 
             <p className="mt-0.5 text-sm text-text-tertiary">
-              {semester.courses.length} planned courses
+              {semester.courses.length} planned{" "}
+              {semester.courses.length === 1 ? "course" : "courses"}
             </p>
           </div>
         </div>
@@ -66,16 +62,17 @@ export function SemesterCard({
       </div>
 
       {semesterIssues.length > 0 ? (
-        <div className="space-y-2 border-b border-border px-5 py-4 sm:px-6">
+        <div className="space-y-2 border-b border-border p-5 sm:px-6">
           {semesterIssues.map((issue) => (
             <div
               key={issue.id}
               role={issue.severity === "error" ? "alert" : undefined}
-              className={
+              className={cn(
+                "flex items-start gap-2 rounded-xl border p-3 text-sm",
                 issue.severity === "error"
-                  ? "flex items-start gap-2 rounded-xl bg-danger-500/10 p-3 text-sm text-danger-text dark:text-red-300"
-                  : "flex items-start gap-2 rounded-xl bg-warning-500/10 p-3 text-sm text-warning-700 dark:text-amber-300"
-              }>
+                  ? "border-danger bg-danger-subtle text-danger-text"
+                  : "border-warning bg-warning-subtle text-warning-text",
+              )}>
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
 
               <p className="leading-5">{issue.message}</p>
@@ -84,9 +81,6 @@ export function SemesterCard({
         </div>
       ) : null}
 
-      {/*
-       * Render each course scheduled for this semester.
-       */}
       <div className="space-y-3 p-5 sm:p-6">
         {semester.courses.map((course) => {
           const canMoveEarlier =
@@ -99,7 +93,7 @@ export function SemesterCard({
             semesterIndex < semesterCount - 1
 
           /**
-           * Issues with a course ID belong directly to that course.
+           * Issues with a course ID belong directly to this course.
            */
           const courseIssues = validationIssues.filter(
             (issue) => issue.courseId === course.id,

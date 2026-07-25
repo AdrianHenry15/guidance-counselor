@@ -4,6 +4,8 @@ import { computerScienceBachelorProgram } from "@/data/degree.data"
 import { validateGeneratePlanRequest } from "@/lib/planner/validate-generate-plan-request"
 import { createTranscriptCourse } from "@/tests/factories/transcript-course.factory"
 
+const validStartYear = new Date().getFullYear() + 1
+
 /**
  * Creates a valid planner request that individual tests can override.
  */
@@ -14,7 +16,7 @@ function createValidRequest() {
       programId: computerScienceBachelorProgram.id,
       priorCredential: "none",
       startTerm: "fall",
-      startYear: 2027,
+      startYear: validStartYear,
       fallSpringCreditTarget: 12,
       summerCreditTarget: 6,
       includeSummer: true,
@@ -33,7 +35,7 @@ describe("validateGeneratePlanRequest", () => {
         programId: computerScienceBachelorProgram.id,
         priorCredential: "none",
         startTerm: "fall",
-        startYear: 2027,
+        startYear: validStartYear,
         fallSpringCreditTarget: 12,
         summerCreditTarget: 6,
         includeSummer: true,
@@ -72,7 +74,7 @@ describe("validateGeneratePlanRequest", () => {
       validateGeneratePlanRequest({
         options: createValidRequest().options,
       }),
-    ).toThrow("Transcript courses are required.")
+    ).toThrow("Transcript courses were not provided.")
   })
 
   it("rejects an empty transcript course list", () => {
@@ -81,7 +83,7 @@ describe("validateGeneratePlanRequest", () => {
         ...createValidRequest(),
         transcriptCourses: [],
       }),
-    ).toThrow("At least one completed course is required.")
+    ).toThrow("Include at least one completed course before generating a plan.")
   })
 
   it("rejects a request with no passed included courses", () => {
@@ -98,7 +100,7 @@ describe("validateGeneratePlanRequest", () => {
     ]
 
     expect(() => validateGeneratePlanRequest(request)).toThrow(
-      "At least one passed and included course is required.",
+      "Include at least one completed course before generating a plan.",
     )
   })
 
@@ -112,7 +114,7 @@ describe("validateGeneratePlanRequest", () => {
     ]
 
     expect(() => validateGeneratePlanRequest(request)).toThrow(
-      "Included transcript courses must have a title.",
+      "Every included course must have a title.",
     )
   })
 
@@ -126,7 +128,7 @@ describe("validateGeneratePlanRequest", () => {
     ]
 
     expect(() => validateGeneratePlanRequest(request)).toThrow(
-      "Included transcript courses must have credits greater than zero.",
+      "Every included course must have a credit value greater than zero.",
     )
   })
 
@@ -152,7 +154,7 @@ describe("validateGeneratePlanRequest", () => {
     }
 
     expect(() => validateGeneratePlanRequest(invalidRequest)).toThrow(
-      "The selected start term is invalid.",
+      "The selected starting term is invalid.",
     )
   })
 
@@ -160,11 +162,10 @@ describe("validateGeneratePlanRequest", () => {
     const request = createValidRequest()
 
     request.options.startTerm = "summer"
-
     request.options.includeSummer = false
 
     expect(() => validateGeneratePlanRequest(request)).toThrow(
-      "Summer cannot be the starting term when summer scheduling is disabled.",
+      "A plan cannot start in summer when summer courses are disabled.",
     )
   })
 
@@ -174,7 +175,7 @@ describe("validateGeneratePlanRequest", () => {
     request.options.fallSpringCreditTarget = 22
 
     expect(() => validateGeneratePlanRequest(request)).toThrow(
-      "Fall and spring credit targets must be between 1 and 21.",
+      "Fall and spring credits must be between 1 and 21.",
     )
   })
 
@@ -184,7 +185,7 @@ describe("validateGeneratePlanRequest", () => {
     request.options.summerCreditTarget = 13
 
     expect(() => validateGeneratePlanRequest(request)).toThrow(
-      "Summer credit targets must be between 1 and 12.",
+      "Summer credits must be between 1 and 12.",
     )
   })
 })

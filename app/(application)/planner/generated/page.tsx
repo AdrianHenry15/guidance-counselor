@@ -306,19 +306,20 @@ export default function GeneratedPlanPage() {
         <div className="space-y-5">
           {generatedPlan.semesters.map((semester, semesterIndex) => {
             /**
-             * Limit each semester card to issues associated with that term.
+             * Only pass validation issues associated with this semester.
              */
             const semesterIssues = generatedPlan.validation.issues.filter(
               (issue) => issue.semesterId === semester.id,
             )
+
             return (
               <SemesterCard
                 key={semester.id}
                 semester={semester}
                 semesterIndex={semesterIndex}
                 semesterCount={generatedPlan.semesters.length}
-                validationIssues={semesterIssues}
                 editable
+                validationIssues={semesterIssues}
                 onMoveCourse={(courseId, direction) =>
                   handleMoveCourse(semesterIndex, courseId, direction)
                 }

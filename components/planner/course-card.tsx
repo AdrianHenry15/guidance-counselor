@@ -1,3 +1,5 @@
+"use client"
+
 import {
   AlertTriangle,
   ArrowDown,
@@ -8,8 +10,9 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import type { PlannedCourse } from "@/types/academic.type"
-import { PlanValidationIssue } from "@/types/plan-validation.type"
+import type { PlanValidationIssue } from "@/types/plan-validation.type"
 
 interface CourseCardProps {
   course: PlannedCourse
@@ -22,7 +25,7 @@ interface CourseCardProps {
 }
 
 /**
- * Displays one planned course and optional semester-move controls.
+ * Displays one planned course, optional move controls, and course-level issues.
  */
 export function CourseCard({
   course,
@@ -34,19 +37,23 @@ export function CourseCard({
   validationIssues = [],
 }: CourseCardProps) {
   const subjectLabel = course.subjectArea.replaceAll("_", " ").toUpperCase()
+
   const hasErrors = validationIssues.some((issue) => issue.severity === "error")
+
   const hasWarnings = validationIssues.some(
     (issue) => issue.severity === "warning",
   )
-  const issueClasses = hasErrors
-    ? "border-danger-500/50 bg-danger-500/5"
-    : hasWarnings
-      ? "border-warning-500/50 bg-warning-500/5"
-      : "border-border bg-surface-muted"
 
   return (
     <div
-      className={`rounded-2xl border border-border bg-surface-muted p-4 sm:p-5 ${issueClasses}`}>
+      className={cn(
+        "rounded-2xl border p-4 sm:p-5",
+        hasErrors
+          ? "border-danger bg-danger-subtle"
+          : hasWarnings
+            ? "border-warning bg-warning-subtle"
+            : "border-border bg-surface-muted",
+      )}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
@@ -120,11 +127,12 @@ export function CourseCard({
             <div
               key={issue.id}
               role={issue.severity === "error" ? "alert" : undefined}
-              className={
+              className={cn(
+                "flex items-start gap-2 rounded-xl border p-3 text-sm",
                 issue.severity === "error"
-                  ? "flex items-start gap-2 rounded-xl bg-danger-500/10 p-3 text-sm text-danger-text dark:text-red-300"
-                  : "flex items-start gap-2 rounded-xl bg-warning-500/10 p-3 text-sm text-warning-700 dark:text-amber-300"
-              }>
+                  ? "border-danger bg-danger-subtle text-danger-text"
+                  : "border-warning bg-warning-subtle text-warning-text",
+              )}>
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
 
               <p className="leading-5">{issue.message}</p>
