@@ -17,14 +17,12 @@ import type { TranscriptAnalysis } from "@/types/transcript.type"
 interface AcademicPlanContextValue {
   transcriptAnalysis: TranscriptAnalysis | null
   generatedPlan: StudentAcademicPlan | null
-
+  originalGeneratedPlan: StudentAcademicPlan | null
   setTranscriptAnalysis: (analysis: TranscriptAnalysis) => void
-
   updateTranscriptAnalysis: (analysis: TranscriptAnalysis) => void
   updateGeneratedPlan: (plan: StudentAcademicPlan) => void
-
+  resetGeneratedPlan: () => void
   setGeneratedPlan: (plan: StudentAcademicPlan) => void
-
   clearTranscriptAnalysis: () => void
   clearGeneratedPlan: () => void
   clearAcademicPlan: () => void
@@ -43,8 +41,9 @@ export function AcademicPlanProvider({
   const [transcriptAnalysis, setAnalysis] = useState<TranscriptAnalysis | null>(
     null,
   )
-
   const [generatedPlan, setPlan] = useState<StudentAcademicPlan | null>(null)
+  const [originalGeneratedPlan, setOriginalPlan] =
+    useState<StudentAcademicPlan | null>(null)
 
   /**
    * Stores a new transcript and invalidates the previous plan.
@@ -54,6 +53,7 @@ export function AcademicPlanProvider({
 
     // A new transcript invalidates the old generated plan.
     setPlan(null)
+    setOriginalPlan(null)
   }, [])
 
   /**
@@ -65,23 +65,36 @@ export function AcademicPlanProvider({
 
       // Any transcript edit makes the existing plan stale.
       setPlan(null)
+      setOriginalPlan(null)
     },
     [],
   )
+
+  /**
+   * Restores the untouched plan produced by the planner.
+   */
+  const resetGeneratedPlan = useCallback(() => {
+    setPlan(originalGeneratedPlan)
+  }, [originalGeneratedPlan])
 
   /**
    * Stores the latest generated academic plan.
    */
   const setGeneratedPlan = useCallback((plan: StudentAcademicPlan) => {
     setPlan(plan)
+    setOriginalPlan(plan)
   }, [])
 
   const clearTranscriptAnalysis = useCallback(() => {
     setAnalysis(null)
+    setPlan(null)
+    setOriginalPlan(null)
   }, [])
 
   const clearGeneratedPlan = useCallback(() => {
     setPlan(null)
+    setPlan(null)
+    setOriginalPlan(null)
   }, [])
 
   /**
@@ -90,6 +103,7 @@ export function AcademicPlanProvider({
   const clearAcademicPlan = useCallback(() => {
     setAnalysis(null)
     setPlan(null)
+    setOriginalPlan(null)
   }, [])
 
   /**
@@ -106,10 +120,12 @@ export function AcademicPlanProvider({
     () => ({
       transcriptAnalysis,
       generatedPlan,
+      originalGeneratedPlan,
       setTranscriptAnalysis,
       updateTranscriptAnalysis,
       updateGeneratedPlan,
       setGeneratedPlan,
+      resetGeneratedPlan,
       clearTranscriptAnalysis,
       clearGeneratedPlan,
       clearAcademicPlan,
@@ -117,10 +133,12 @@ export function AcademicPlanProvider({
     [
       transcriptAnalysis,
       generatedPlan,
+      originalGeneratedPlan,
       setTranscriptAnalysis,
       updateTranscriptAnalysis,
       updateGeneratedPlan,
       setGeneratedPlan,
+      resetGeneratedPlan,
       clearTranscriptAnalysis,
       clearGeneratedPlan,
       clearAcademicPlan,
