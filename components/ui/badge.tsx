@@ -19,16 +19,13 @@ const variants: Record<BadgeVariant, string> = {
 
   primary: "bg-primary-subtle text-primary",
 
-  success:
-    "bg-success-50 text-success-700 dark:bg-success-700/25 dark:text-green-300",
+  success: "bg-success-subtle text-success-text",
 
-  warning:
-    "bg-warning-50 text-warning-700 dark:bg-warning-700/25 dark:text-amber-300",
+  warning: "bg-warning-subtle text-warning-text",
 
-  danger:
-    "bg-danger-50 text-danger-700 dark:bg-danger-700/25 dark:text-red-300",
+  danger: "bg-danger-subtle text-danger-text",
 
-  info: "bg-info-50 text-info-700 dark:bg-brand-900/40 dark:text-blue-300",
+  info: "bg-info-subtle text-info-text",
 
   accent: "bg-accent-subtle text-accent-foreground",
 }

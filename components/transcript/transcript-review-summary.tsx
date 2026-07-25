@@ -59,7 +59,7 @@ export function TranscriptReviewSummary({
        * Displays client-side or API generation errors.
        */}
       {generationError ? (
-        <p className="mt-4 text-sm font-medium text-danger-600">
+        <p className="mt-4 text-sm font-medium text-danger">
           {generationError}
         </p>
       ) : null}

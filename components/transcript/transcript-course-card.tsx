@@ -142,7 +142,7 @@ export function TranscriptCourseCard({
               !isPassed
                 ? "min-h-11 cursor-not-allowed rounded-xl border border-border bg-surface-muted px-4 text-sm font-semibold text-text-disabled opacity-70"
                 : course.includedInPlan
-                  ? "min-h-11 rounded-xl border border-border-strong bg-surface-muted px-4 text-sm font-semibold text-text-secondary transition hover:border-danger-500 hover:bg-danger-50 hover:text-danger-700 dark:hover:bg-danger-700/15 dark:hover:text-red-300"
+                  ? "min-h-11 rounded-xl border border-border-strong bg-surface-muted px-4 text-sm font-semibold text-text-secondary transition hover:border-danger-500 hover:bg-danger-50 hover:text-danger-text dark:hover:bg-danger-700/15 dark:hover:text-red-300"
                   : "min-h-11 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-hover"
             }>
             {!isPassed
@@ -159,7 +159,7 @@ export function TranscriptCourseCard({
           aria-label={`Remove ${course.normalizedTitle}`}
           title="Remove course"
           onClick={() => onRemove(course.id)}>
-          <Trash2 className="size-4 text-danger-600" />
+          <Trash2 className="size-4 text-danger" />
         </Button>
       </div>
 

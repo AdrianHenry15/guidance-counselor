@@ -29,6 +29,7 @@ import { hasPlanEdits } from "@/lib/planner/has-plan-edits"
  * The plan is stored in shared client state and resets after a full refresh.
  */
 export default function GeneratedPlanPage() {
+  const [moveMessage, setMoveMessage] = useState("")
   const [editError, setEditError] = useState("")
   const router = useRouter()
 
@@ -81,6 +82,10 @@ export default function GeneratedPlanPage() {
 
       setEditError("")
       updateGeneratedPlan(updatedPlan)
+
+      setMoveMessage(
+        `${updatedPlan.semesters[targetSemesterIndex]?.label ?? "The target semester"} now includes the moved course.`,
+      )
     } catch (error) {
       setEditError(
         error instanceof Error
@@ -277,10 +282,14 @@ export default function GeneratedPlanPage() {
         {editError ? (
           <div
             role="alert"
-            className="rounded-2xl border border-danger-500/30 bg-danger-500/10 p-4 text-sm text-danger-700 dark:text-red-300">
+            className="rounded-2xl border border-danger-500/30 bg-danger-500/10 p-4 text-sm text-danger-text dark:text-red-300">
             {editError}
           </div>
         ) : null}
+
+        <p aria-live="polite" className="sr-only">
+          {moveMessage}
+        </p>
 
         {/*
          * Shows deterministic validation results for prerequisite order,
@@ -292,18 +301,27 @@ export default function GeneratedPlanPage() {
          * Render the generated semesters in chronological order.
          */}
         <div className="space-y-5">
-          {generatedPlan.semesters.map((semester, semesterIndex) => (
-            <SemesterCard
-              key={semester.id}
-              semester={semester}
-              semesterIndex={semesterIndex}
-              semesterCount={generatedPlan.semesters.length}
-              editable
-              onMoveCourse={(courseId, direction) =>
-                handleMoveCourse(semesterIndex, courseId, direction)
-              }
-            />
-          ))}
+          {generatedPlan.semesters.map((semester, semesterIndex) => {
+            /**
+             * Limit each semester card to issues associated with that term.
+             */
+            const semesterIssues = generatedPlan.validation.issues.filter(
+              (issue) => issue.semesterId === semester.id,
+            )
+            return (
+              <SemesterCard
+                key={semester.id}
+                semester={semester}
+                semesterIndex={semesterIndex}
+                semesterCount={generatedPlan.semesters.length}
+                validationIssues={semesterIssues}
+                editable
+                onMoveCourse={(courseId, direction) =>
+                  handleMoveCourse(semesterIndex, courseId, direction)
+                }
+              />
+            )
+          })}
         </div>
 
         {/*

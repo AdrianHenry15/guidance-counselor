@@ -26,7 +26,7 @@ function ValidationIssueRow({ issue }: { issue: PlanValidationIssue }) {
       <Icon
         className={
           isError
-            ? "mt-0.5 size-5 shrink-0 text-danger-600"
+            ? "mt-0.5 size-5 shrink-0 text-danger"
             : "mt-0.5 size-5 shrink-0 text-warning-600"
         }
       />

@@ -274,7 +274,7 @@ export default function DashboardPage() {
                   className={
                     generatedPlan.validation.isValid
                       ? "mt-0.5 size-5 shrink-0 text-success-600"
-                      : "mt-0.5 size-5 shrink-0 text-danger-600"
+                      : "mt-0.5 size-5 shrink-0 text-danger"
                   }
                 />
 

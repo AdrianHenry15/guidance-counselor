@@ -1,8 +1,9 @@
 import type { PlannedSemester } from "@/types/academic.type"
-import { CalendarDays } from "lucide-react"
+import { AlertTriangle, CalendarDays } from "lucide-react"
 
 import { CourseCard } from "@/components/planner/course-card"
 import { Card } from "@/components/ui/card"
+import { PlanValidationIssue } from "@/types/plan-validation.type"
 
 /**
  * Props for one planned semester.
@@ -13,6 +14,7 @@ interface SemesterCardProps {
   semesterCount?: number
   editable?: boolean
   onMoveCourse?: (courseId: string, direction: "earlier" | "later") => void
+  validationIssues?: PlanValidationIssue[]
 }
 
 /**
@@ -24,11 +26,17 @@ export function SemesterCard({
   semesterCount,
   editable = false,
   onMoveCourse,
+  validationIssues = [],
 }: SemesterCardProps) {
   const totalCredits = semester.courses.reduce(
     (total, course) => total + course.credits,
     0,
   )
+
+  /**
+   * Semester issues are not associated with one specific course.
+   */
+  const semesterIssues = validationIssues.filter((issue) => !issue.courseId)
 
   return (
     <Card className="overflow-hidden">
@@ -57,6 +65,25 @@ export function SemesterCard({
         </div>
       </div>
 
+      {semesterIssues.length > 0 ? (
+        <div className="space-y-2 border-b border-border px-5 py-4 sm:px-6">
+          {semesterIssues.map((issue) => (
+            <div
+              key={issue.id}
+              role={issue.severity === "error" ? "alert" : undefined}
+              className={
+                issue.severity === "error"
+                  ? "flex items-start gap-2 rounded-xl bg-danger-500/10 p-3 text-sm text-danger-text dark:text-red-300"
+                  : "flex items-start gap-2 rounded-xl bg-warning-500/10 p-3 text-sm text-warning-700 dark:text-amber-300"
+              }>
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+
+              <p className="leading-5">{issue.message}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       {/*
        * Render each course scheduled for this semester.
        */}
@@ -71,6 +98,13 @@ export function SemesterCard({
             semesterCount !== undefined &&
             semesterIndex < semesterCount - 1
 
+          /**
+           * Issues with a course ID belong directly to that course.
+           */
+          const courseIssues = validationIssues.filter(
+            (issue) => issue.courseId === course.id,
+          )
+
           return (
             <CourseCard
               key={course.id}
@@ -78,6 +112,7 @@ export function SemesterCard({
               editable={editable}
               canMoveEarlier={canMoveEarlier}
               canMoveLater={canMoveLater}
+              validationIssues={courseIssues}
               onMoveEarlier={
                 editable && onMoveCourse
                   ? () => onMoveCourse(course.id, "earlier")

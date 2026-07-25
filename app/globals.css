@@ -89,6 +89,38 @@
   --color-danger-600: var(--danger-600);
   --color-danger-700: var(--danger-700);
 
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-active: var(--danger-active);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-muted: var(--danger-muted);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-text: var(--danger-text);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-muted: var(--success-muted);
+  --color-success-text: var(--success-text);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-muted: var(--warning-muted);
+  --color-warning-text: var(--warning-text);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-muted: var(--danger-muted);
+  --color-danger-text: var(--danger-text);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-muted: var(--info-muted);
+  --color-info-text: var(--info-text);
+  --color-info-foreground: var(--info-foreground);
+
   --color-info-50: var(--info-50);
   --color-info-100: var(--info-100);
   --color-info-500: var(--info-500);
