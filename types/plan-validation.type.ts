@@ -3,6 +3,7 @@ export type PlanValidationIssueType =
   | "duplicate_course"
   | "credit_overload"
   | "credit_mismatch"
+  | "prerequisite_order"
 
 export type PlanValidationSeverity = "warning" | "error"
 

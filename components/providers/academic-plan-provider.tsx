@@ -93,7 +93,6 @@ export function AcademicPlanProvider({
 
   const clearGeneratedPlan = useCallback(() => {
     setPlan(null)
-    setPlan(null)
     setOriginalPlan(null)
   }, [])
 

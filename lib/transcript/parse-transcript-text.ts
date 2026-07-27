@@ -11,12 +11,12 @@ import { normalizeCourseName } from "./normalize-course"
  * Matches supported grades near the end of a transcript row.
  */
 const gradePattern =
-  /\b(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP)\b(?=\s*(?:[0-9](?:\.[0-9])?\s*(?:credits?|hrs?|hours?))?\s*$)/i
+  /(?<!\S)(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP)(?=\s*(?:\d+(?:\.\d+)?\s*(?:credits?|hrs?|hours?))?\s*$)/i
 
 /**
  * Matches an explicit credit value such as "3 credits" or "4 hrs".
  */
-const creditPattern = /\b([0-9](?:\.[0-9])?)\s*(?:credits?|hrs?|hours?)\b/i
+const creditPattern = /\b(\d+(?:\.\d+)?)\s*(?:credits?|hrs?|hours?)\b/i
 
 /**
  * Converts a parsed grade into the planner's completion status.

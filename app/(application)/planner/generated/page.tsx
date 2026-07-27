@@ -242,7 +242,7 @@ export default function GeneratedPlanPage() {
                 {totalProgramCredits} total degree credits mapped
               </p>
               {isPlanEdited ? (
-                <p className="mt-2 text-xs font-medium text-warning-700 dark:text-amber-300">
+                <p className="mt-2 text-xs font-medium text-warning-text dark:text-amber-300">
                   This plan includes manual semester changes.
                 </p>
               ) : (
@@ -285,7 +285,7 @@ export default function GeneratedPlanPage() {
         {editError ? (
           <div
             role="alert"
-            className="rounded-2xl border border-danger-500/30 bg-danger-500/10 p-4 text-sm text-danger-text dark:text-red-300">
+            className="rounded-2xl border border-danger bg-danger-subtle p-4 text-sm text-danger-text">
             {editError}
           </div>
         ) : null}
@@ -332,7 +332,7 @@ export default function GeneratedPlanPage() {
          * Clarifies that this generated plan is advisory and should be checked
          * against the student's institution before registration.
          */}
-        <div className="rounded-2xl border border-info-500/30 p-4 text-sm leading-6 dark:bg-brand-900/20 dark:text-blue-200">
+        <div className="rounded-2xl border border-info bg-info-subtle p-4 text-sm leading-6 text-info-text">
           This plan uses generalized course categories and does not replace your
           institution&apos;s official degree audit. Verify course equivalencies,
           transfer credits, prerequisites, and residency requirements with an

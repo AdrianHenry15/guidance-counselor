@@ -34,7 +34,7 @@ const defaultPlanOptions: GeneratePlanOptions = {
   programId: "bachelor-computer-science",
   priorCredential: "none",
   startTerm: "fall",
-  startYear: 2027,
+  startYear: new Date().getFullYear() + 1,
   fallSpringCreditTarget: 12,
   summerCreditTarget: 6,
   includeSummer: true,

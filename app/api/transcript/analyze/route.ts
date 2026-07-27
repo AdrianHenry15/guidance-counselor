@@ -10,6 +10,7 @@ import type {
   TranscriptCourse,
   TranscriptFileType,
 } from "@/types/transcript.type"
+import { calculateIncludedCredits } from "@/lib/transcript/transcript-course-utils"
 
 /**
  * PDF extraction requires Node-compatible APIs.
@@ -235,12 +236,7 @@ export async function POST(
       )
     }
 
-    const earnedCredits = courses
-      .filter(
-        (course) =>
-          course.completionStatus === "passed" && course.includedInPlan,
-      )
-      .reduce((total, course) => total + course.credits, 0)
+    const earnedCredits = calculateIncludedCredits(courses)
 
     const analysis: TranscriptAnalysis = {
       id: randomUUID(),

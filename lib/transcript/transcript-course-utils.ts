@@ -22,3 +22,19 @@ export function calculateIncludedCourseCount(
 ): number {
   return getIncludedPassedCourses(courses).length
 }
+
+/**
+ * Returns passed and included courses that cannot be sent to the planner.
+ */
+export function getInvalidIncludedCourses(
+  courses: TranscriptCourse[],
+): TranscriptCourse[] {
+  return getIncludedPassedCourses(courses).filter((course) => {
+    const hasValidTitle = course.normalizedTitle.trim().length > 0
+
+    const hasValidCredits =
+      Number.isFinite(course.credits) && course.credits > 0
+
+    return !hasValidTitle || !hasValidCredits
+  })
+}

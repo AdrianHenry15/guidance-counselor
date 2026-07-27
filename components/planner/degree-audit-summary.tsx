@@ -32,7 +32,7 @@ function RequirementProgressRow({
         <Icon
           className={
             requirement.status === "complete"
-              ? "mt-0.5 size-5 shrink-0 text-success-600"
+              ? "mt-0.5 size-5 shrink-0 text-success-text"
               : requirement.status === "in_progress"
                 ? "mt-0.5 size-5 shrink-0 text-primary"
                 : "mt-0.5 size-5 shrink-0 text-text-tertiary"

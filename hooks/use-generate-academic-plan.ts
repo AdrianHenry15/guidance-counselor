@@ -4,21 +4,19 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { useAcademicPlan } from "@/components/providers/academic-plan-provider"
-import { getIncludedPassedCourses } from "@/lib/transcript/transcript-course-utils"
+import {
+  getIncludedPassedCourses,
+  getInvalidIncludedCourses,
+} from "@/lib/transcript/transcript-course-utils"
 import type { StudentAcademicPlan } from "@/types/academic.type"
 import type { GeneratePlanOptions } from "@/types/planner.type"
 import type { TranscriptAnalysis } from "@/types/transcript.type"
 
-/**
- * Inputs required to generate a plan from reviewed transcript data.
- */
 interface UseGenerateAcademicPlanArguments {
   analysis: TranscriptAnalysis
   options: GeneratePlanOptions
 }
-/**
- * Expected response from the plan-generation API.
- */
+
 interface GeneratePlanResponse {
   success: boolean
   plan?: StudentAcademicPlan
@@ -36,27 +34,25 @@ export function useGenerateAcademicPlan({
   const { setGeneratedPlan } = useAcademicPlan()
 
   const [isGenerating, setIsGenerating] = useState(false)
-
   const [generationError, setGenerationError] = useState("")
 
   async function generatePlan() {
     /**
-     * Prevent generation without at least one eligible course.
+     * Validate included courses before checking whether the collection is empty.
      */
+    const invalidCourses = getInvalidIncludedCourses(analysis.courses)
+
+    if (invalidCourses.length > 0) {
+      setGenerationError(
+        "Every included course must have a title and a credit value greater than zero.",
+      )
+
+      return
+    }
+
     const includedCourses = getIncludedPassedCourses(analysis.courses)
 
     if (!includedCourses.length) {
-      const invalidCourses = includedCourses.filter(
-        (course) => !course.normalizedTitle.trim() || course.credits <= 0,
-      )
-
-      if (invalidCourses.length) {
-        setGenerationError(
-          "Every included course must have a title and a credit value greater than zero.",
-        )
-
-        return
-      }
       setGenerationError(
         "Include at least one passed course before generating your plan.",
       )
@@ -85,9 +81,6 @@ export function useGenerateAcademicPlan({
         throw new Error(result.error ?? "Academic plan generation failed.")
       }
 
-      /**
-       * Store the generated plan before opening the results page.
-       */
       setGeneratedPlan(result.plan)
       router.push("/planner/generated")
     } catch (error) {

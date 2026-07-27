@@ -1,20 +1,17 @@
-import path from "node:path"
-
+import { fileURLToPath } from "node:url"
 import { defineConfig } from "vitest/config"
 
-/**
- * Vitest configuration for deterministic planner modules.
- */
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "."),
-    },
-  },
   test: {
     environment: "node",
+    setupFiles: ["./tests/setup.ts"],
     globals: true,
-    include: ["tests/**/*.test.ts"],
+    restoreMocks: true,
     clearMocks: true,
+  },
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./", import.meta.url)),
+    },
   },
 })

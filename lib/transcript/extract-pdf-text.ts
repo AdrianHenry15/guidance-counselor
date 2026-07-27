@@ -10,9 +10,6 @@ interface PdfTextExtractionResult {
 /**
  * Narrows an unknown PDF.js content item to the text-item shape used by this
  * extractor.
- *
- * PDF.js text-content arrays can contain multiple item types, so each item must
- * be checked before reading its text value.
  */
 function isTextItem(item: unknown): item is {
   str: string
@@ -29,15 +26,7 @@ function isTextItem(item: unknown): item is {
 /**
  * Extracts selectable text from a PDF file using PDF.js.
  *
- * Processing flow:
- *
- * 1. Load the PDF from the uploaded file buffer.
- * 2. Read each page in sequence.
- * 3. Reconstruct approximate lines from PDF.js text items.
- * 4. Combine and normalize all extracted page text.
- *
- * This function does not perform OCR. Scanned PDFs with no selectable text will
- * typically return little or no useful content.
+ * This function does not perform OCR.
  */
 export async function extractPdfText(
   file: File,
@@ -51,58 +40,61 @@ export async function extractPdfText(
     data,
   })
 
-  const document = await loadingTask.promise
-  const pages: string[] = []
-
   try {
+    const document = await loadingTask.promise
+    const pages: string[] = []
+
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       const page = await document.getPage(pageNumber)
-      const content = await page.getTextContent()
 
-      const pageLines: string[] = []
-      let currentLine = ""
+      try {
+        const content = await page.getTextContent()
 
-      for (const item of content.items) {
-        if (!isTextItem(item)) {
-          continue
+        const pageLines: string[] = []
+        let currentLine = ""
+
+        for (const item of content.items) {
+          if (!isTextItem(item)) {
+            continue
+          }
+
+          const value = item.str.trim()
+
+          if (!value) {
+            continue
+          }
+
+          currentLine = currentLine ? `${currentLine} ${value}` : value
+
+          if (item.hasEOL) {
+            pageLines.push(currentLine.trim())
+            currentLine = ""
+          }
         }
 
-        const value = item.str.trim()
-
-        if (!value) {
-          continue
-        }
-
-        currentLine = currentLine ? `${currentLine} ${value}` : value
-
-        if (item.hasEOL) {
+        if (currentLine.trim()) {
           pageLines.push(currentLine.trim())
-          currentLine = ""
         }
+
+        pages.push(pageLines.join("\n"))
+      } finally {
+        page.cleanup()
       }
+    }
 
-      if (currentLine.trim()) {
-        pageLines.push(currentLine.trim())
-      }
+    const text = pages
+      .filter(Boolean)
+      .join("\n\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
 
-      pages.push(pageLines.join("\n"))
-
-      page.cleanup()
+    return {
+      text,
+      pageCount: document.numPages,
+      characterCount: text.length,
     }
   } finally {
-    await document._pdfInfo.destroy()
-  }
-
-  const text = pages
-    .filter(Boolean)
-    .join("\n\n")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
-
-  return {
-    text,
-    pageCount: document.numPages,
-    characterCount: text.length,
+    await loadingTask.destroy()
   }
 }

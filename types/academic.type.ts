@@ -1,7 +1,7 @@
-import { TranscriptCreditAllocation } from "./credit-allocation.type"
-import { DegreeAudit } from "./degree-audit.type"
-import { PlanValidationResult } from "./plan-validation.type"
-import { PriorCredential } from "./planner.type"
+import type { TranscriptCreditAllocation } from "./credit-allocation.type"
+import type { DegreeAudit } from "./degree-audit.type"
+import type { PlanValidationResult } from "./plan-validation.type"
+import type { PriorCredential } from "./planner.type"
 
 export type EducationLevel =
   | "elementary"
