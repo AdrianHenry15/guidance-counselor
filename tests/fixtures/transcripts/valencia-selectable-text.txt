@@ -1,0 +1,30 @@
+Valencia College
+PERMANENT ACADEMIC RECORD
+PREFIX NO. COURSE TITLE CRED GRD QUAL. PTS
+
+TRANSFER CREDIT ACCEPTED BY THE INSTITUTION:
+TRANSFER Example University
+ENC 1101 Freshman Comp I 3.00 B
+MAC 1114 College Trigonometry 3.00 C
+XFER 1000 The Discipline of Computing 1.00 B
+XFER 1000 Atmospheric Proc & Patterns 4.00 C
+XFER 1000 Atmospheric Proc & Patterns 0.00 N
+XFER 1000 Intro Italian I 4.00 B
+Ehrs: 15.00 GPA-Hrs: 15.00 QPts: 38.00 GPA: 2.53
+
+INSTITUTION CREDIT:
+Fall 2024 Credit Courses
+ENC 1102 Freshman Comp II 3.00 A 12.00
+SLS 1122 New Student Experience 3.00 A 12.00
+Ehrs: 6.00 GPA-Hrs: 6.00 QPts: 24.00 GPA: 4.00
+
+********************** TRANSCRIPT TOTALS ***********************
+
+Transcript Legend
+Degrees Granted:
+Advanced Technical Certificate and Applied Technology Diploma
+Grading Scales
+A 4.0
+B 3.0
+C 2.0
+Satisfactory grades may count as credits earned in a degree program.

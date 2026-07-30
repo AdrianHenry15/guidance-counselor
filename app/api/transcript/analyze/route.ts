@@ -1,16 +1,16 @@
-import { randomUUID } from "crypto"
+import { randomUUID } from "node:crypto"
+
 import { NextResponse } from "next/server"
 
 import { extractPdfText } from "@/lib/transcript/extract-pdf-text"
 import { isUsablePdfText } from "@/lib/transcript/is-usable-pdf-text"
-import { parseTranscriptText } from "@/lib/transcript/parse-transcript-text"
+import { calculateIncludedCredits } from "@/lib/transcript/transcript-course-utils"
 import type {
   AnalyzeTranscriptResponse,
   TranscriptAnalysis,
-  TranscriptCourse,
   TranscriptFileType,
 } from "@/types/transcript.type"
-import { calculateIncludedCredits } from "@/lib/transcript/transcript-course-utils"
+import { parseTranscriptTextDetailed } from "@/lib/transcript/parse-transcript-text"
 
 /**
  * PDF extraction requires Node-compatible APIs.
@@ -29,6 +29,11 @@ const acceptedMimeTypes = new Set([
 ])
 
 const acceptedExtensions = new Set(["pdf", "jpg", "jpeg", "png", "txt", "csv"])
+
+interface ExtractionMetadata {
+  pageCount: number
+  characterCount: number
+}
 
 /**
  * Returns the lowercase extension without the leading period.
@@ -156,41 +161,34 @@ export async function POST(
 
     const fileType = getFileType(file)
 
-    let courses: TranscriptCourse[] = []
-    const warnings: string[] = []
+    let extractedText = ""
+    let extractionMetadata: ExtractionMetadata | undefined
+
+    const fileWarnings: string[] = []
 
     if (fileType === "text" || fileType === "csv") {
-      const text = await file.text()
-
-      courses = parseTranscriptText(text)
-
-      if (!courses.length) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "No recognizable course rows were found in the file.",
-          },
-          {
-            status: 422,
-          },
-        )
-      }
+      extractedText = await file.text()
     } else if (fileType === "pdf") {
       const extraction = await extractPdfText(file)
 
+      extractedText = extraction.text
+
+      extractionMetadata = {
+        pageCount: extraction.pageCount,
+        characterCount: extraction.characterCount,
+      }
+
       /**
-       * Transcript contents should never be logged in production.
+       * Never log transcript text or document previews.
        */
       if (process.env.NODE_ENV === "development") {
-        console.log("PDF extraction result:", {
-          fileName: file.name,
+        console.info("[pdf-transcript-extraction]", {
           pageCount: extraction.pageCount,
           characterCount: extraction.characterCount,
-          preview: extraction.text.slice(0, 500),
         })
       }
 
-      if (!isUsablePdfText(extraction.text)) {
+      if (!isUsablePdfText(extractedText)) {
         return NextResponse.json(
           {
             success: false,
@@ -203,22 +201,7 @@ export async function POST(
         )
       }
 
-      courses = parseTranscriptText(extraction.text)
-
-      if (!courses.length) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Text was extracted from the PDF, but no recognizable course rows were found.",
-          },
-          {
-            status: 422,
-          },
-        )
-      }
-
-      warnings.push(
+      fileWarnings.push(
         `Extracted selectable text from ${extraction.pageCount} PDF ${
           extraction.pageCount === 1 ? "page" : "pages"
         }. Review every detected course before generating a plan.`,
@@ -236,6 +219,30 @@ export async function POST(
       )
     }
 
+    const parsedTranscript = parseTranscriptTextDetailed(extractedText)
+
+    const { courses, parserId, detectionScore, usedGenericFallback } =
+      parsedTranscript
+
+    if (!courses.length) {
+      const error =
+        fileType === "pdf"
+          ? "Text was extracted from the PDF, but no recognizable course rows were found."
+          : "No recognizable course rows were found in the file."
+
+      return NextResponse.json(
+        {
+          success: false,
+          error,
+        },
+        {
+          status: 422,
+        },
+      )
+    }
+
+    const warnings = [...parsedTranscript.warnings, ...fileWarnings]
+
     const earnedCredits = calculateIncludedCredits(courses)
 
     const analysis: TranscriptAnalysis = {
@@ -246,7 +253,23 @@ export async function POST(
       estimatedCreditsEarned: earnedCredits,
       courses,
       warnings,
+      parserId,
+      detectionScore,
+      usedGenericFallback,
       analyzedAt: new Date().toISOString(),
+    }
+
+    if (process.env.NODE_ENV === "development") {
+      console.info("[transcript-analysis]", {
+        fileType,
+        parserId,
+        detectionScore,
+        usedGenericFallback,
+        courseCount: courses.length,
+        warningCount: warnings.length,
+        pageCount: extractionMetadata?.pageCount,
+        characterCount: extractionMetadata?.characterCount,
+      })
     }
 
     return NextResponse.json({

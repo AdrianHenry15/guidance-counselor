@@ -1,27 +1,31 @@
-import { randomUUID } from "crypto"
+import { randomUUID } from "node:crypto"
 
+import { classifyCourse } from "@/lib/transcript/classification/classify-course"
+import type { ExtractedCourseRow } from "@/lib/transcript/parsers/extracted-course-row.type"
+import {
+  parseTranscriptRows,
+  parseTranscriptRowsDetailed,
+} from "@/lib/transcript/parsers/parser-registry"
 import type {
   TranscriptCompletionStatus,
   TranscriptCourse,
+  TranscriptParserId,
 } from "@/types/transcript.type"
 
-import { normalizeCourseName } from "./normalize-course"
+export interface ParsedTranscriptResult {
+  courses: TranscriptCourse[]
+  parserId: TranscriptParserId
+  detectionScore: number
+  usedGenericFallback: boolean
+  warnings: string[]
+}
 
 /**
- * Matches supported grades near the end of a transcript row.
+ * Converts a transcript grade into the application's completion state.
  */
-const gradePattern =
-  /(?<!\S)(A\+|A-|A|B\+|B-|B|C\+|C-|C|D\+|D-|D|F|P|S|U|W|IP)(?=\s*(?:\d+(?:\.\d+)?\s*(?:credits?|hrs?|hours?))?\s*$)/i
-
-/**
- * Matches an explicit credit value such as "3 credits" or "4 hrs".
- */
-const creditPattern = /\b(\d+(?:\.\d+)?)\s*(?:credits?|hrs?|hours?)\b/i
-
-/**
- * Converts a parsed grade into the planner's completion status.
- */
-function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
+function getCompletionStatus(
+  grade: string | undefined,
+): TranscriptCompletionStatus {
   if (!grade) {
     return "unknown"
   }
@@ -32,7 +36,7 @@ function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
     return "withdrawn"
   }
 
-  if (["F", "U"].includes(normalizedGrade)) {
+  if (normalizedGrade === "F" || normalizedGrade === "U") {
     return "failed"
   }
 
@@ -40,51 +44,91 @@ function getCompletionStatus(grade?: string): TranscriptCompletionStatus {
     return "in_progress"
   }
 
+  if (normalizedGrade === "N" || normalizedGrade === "X") {
+    return "unknown"
+  }
+
   return "passed"
 }
 
 /**
- * Parses transcript text into normalized course records.
+ * Converts internal extracted rows into the application's TranscriptCourse
+ * model.
+ */
+function convertRowsToCourses(rows: ExtractedCourseRow[]): TranscriptCourse[] {
+  return rows.map((row): TranscriptCourse => {
+    const classification = classifyCourse({
+      courseCode: row.courseCode,
+      title: row.title,
+    })
+
+    const completionStatus = getCompletionStatus(row.grade)
+
+    const originalName = [row.courseCode, row.title].filter(Boolean).join(" ")
+
+    return {
+      id: randomUUID(),
+      originalName,
+      normalizedTitle: classification.normalizedTitle,
+      subjectArea: classification.subjectArea,
+      source: "extracted",
+      credits: row.credits ?? 0,
+      grade: row.grade,
+      completionStatus,
+      includedInPlan: completionStatus === "passed",
+      confidence: row.confidence,
+    }
+  })
+}
+
+/**
+ * Compatibility parser used by existing application code and tests.
  */
 export function parseTranscriptText(text: string): TranscriptCourse[] {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length >= 4)
-    .map((line): TranscriptCourse => {
-      const gradeMatch = line.match(gradePattern)
-
-      const grade = gradeMatch?.[1]?.toUpperCase()
-
-      const creditsMatch = line.match(creditPattern)
-
-      const credits = creditsMatch ? Number(creditsMatch[1]) : 0
-
-      /**
-       * Remove grade and credit values before normalizing the course name.
-       */
-      const courseName = line
-        .replace(gradePattern, "")
-        .replace(creditPattern, "")
-        .replace(/\s{2,}/g, " ")
-        .trim()
-
-      const normalized = normalizeCourseName(courseName)
-
-      const completionStatus = getCompletionStatus(grade)
-
-      return {
-        id: randomUUID(),
-        originalName: courseName,
-        normalizedTitle: normalized.normalizedTitle,
-        subjectArea: normalized.subjectArea,
-        source: "extracted",
-        credits,
-        grade,
-        completionStatus,
-        includedInPlan: completionStatus === "passed",
-        confidence: normalized.normalizedTitle === courseName ? 0.55 : 0.9,
-      }
-    })
-    .filter((course) => course.originalName.length > 0)
+  return convertRowsToCourses(parseTranscriptRows(text))
 }
+
+/**
+ * Parses transcript text and includes diagnostic information for the API.
+ */
+export function parseTranscriptTextDetailed(
+  text: string,
+): ParsedTranscriptResult {
+  const parsed = parseTranscriptRowsDetailed(text)
+
+  const courses = convertRowsToCourses(parsed.rows)
+
+  const warnings: string[] = []
+
+  if (parsed.usedGenericFallback) {
+    warnings.push(
+      "The detected transcript format could not be parsed reliably, so a generic parser was used. Review every course carefully.",
+    )
+  } else if (parsed.parserId === "generic-course-row") {
+    warnings.push(
+      "This transcript used the generic course parser. Review course titles, credits, grades, and subject categories before generating a plan.",
+    )
+  }
+
+  const lowerConfidenceCourseCount = courses.filter(
+    (course) => course.confidence < 0.75,
+  ).length
+
+  if (lowerConfidenceCourseCount > 0) {
+    warnings.push(
+      `${lowerConfidenceCourseCount} ${
+        lowerConfidenceCourseCount === 1 ? "course has" : "courses have"
+      } lower extraction confidence and should be reviewed.`,
+    )
+  }
+
+  return {
+    courses,
+    parserId: parsed.parserId as TranscriptParserId,
+    detectionScore: parsed.detectionScore,
+    usedGenericFallback: parsed.usedGenericFallback,
+    warnings,
+  }
+}
+
+export { isLikelyTranscriptCourseLine } from "./parsers/generic-course-row-parser"

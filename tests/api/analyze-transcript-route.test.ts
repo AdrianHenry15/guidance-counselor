@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+
 import { POST } from "@/app/api/transcript/analyze/route"
 import { extractPdfText } from "@/lib/transcript/extract-pdf-text"
 import { isUsablePdfText } from "@/lib/transcript/is-usable-pdf-text"
-import { parseTranscriptText } from "@/lib/transcript/parse-transcript-text"
 import { createTranscriptCourse } from "@/tests/factories/transcript-course.factory"
+import { parseTranscriptTextDetailed } from "@/lib/transcript/parse-transcript-text"
 
 vi.mock("@/lib/transcript/extract-pdf-text", () => ({
   extractPdfText: vi.fn(),
@@ -14,14 +15,20 @@ vi.mock("@/lib/transcript/is-usable-pdf-text", () => ({
 }))
 
 vi.mock("@/lib/transcript/parse-transcript-text", () => ({
-  parseTranscriptText: vi.fn(),
+  parseTranscriptTextDetailed: vi.fn(),
 }))
 
 const mockedExtractPdfText = vi.mocked(extractPdfText)
 
 const mockedIsUsablePdfText = vi.mocked(isUsablePdfText)
 
-const mockedParseTranscriptText = vi.mocked(parseTranscriptText)
+const mockedParseTranscriptTextDetailed = vi.mocked(parseTranscriptTextDetailed)
+
+const genericParserWarning =
+  "This transcript used the generic course parser. Review course titles, credits, grades, and subject categories before generating a plan."
+
+const genericFallbackWarning =
+  "The detected transcript format could not be parsed reliably, so a generic parser was used. Review every course carefully."
 
 function createUploadRequest(file?: File): Request {
   const formData = new FormData()
@@ -42,17 +49,23 @@ describe("POST /api/transcript/analyze", () => {
 
     mockedIsUsablePdfText.mockReturnValue(true)
 
-    mockedParseTranscriptText.mockReturnValue([
-      createTranscriptCourse({
-        id: "course-1",
-        title: "English Composition I",
-        subjectArea: "english",
-        credits: 3,
-        completionStatus: "passed",
-        includedInPlan: true,
-        source: "extracted",
-      }),
-    ])
+    mockedParseTranscriptTextDetailed.mockReturnValue({
+      courses: [
+        createTranscriptCourse({
+          id: "course-1",
+          title: "English Composition I",
+          subjectArea: "english",
+          credits: 3,
+          completionStatus: "passed",
+          includedInPlan: true,
+          source: "extracted",
+        }),
+      ],
+      parserId: "valencia-college",
+      detectionScore: 1,
+      usedGenericFallback: false,
+      warnings: [],
+    })
 
     mockedExtractPdfText.mockResolvedValue({
       text: "English Composition I A 3 credits",
@@ -117,6 +130,7 @@ describe("POST /api/transcript/analyze", () => {
     })
 
     const response = await POST(request)
+
     const payload = await response.json()
 
     expect(response.status).toBe(413)
@@ -160,9 +174,12 @@ describe("POST /api/transcript/analyze", () => {
     const payload = await response.json()
 
     expect(response.status).toBe(200)
+
     expect(payload.success).toBe(true)
 
-    expect(mockedParseTranscriptText).toHaveBeenCalledWith(transcriptText)
+    expect(mockedParseTranscriptTextDetailed).toHaveBeenCalledWith(
+      transcriptText,
+    )
 
     expect(payload.analysis).toEqual(
       expect.objectContaining({
@@ -170,6 +187,9 @@ describe("POST /api/transcript/analyze", () => {
         fileType: "text",
         educationLevel: "college",
         estimatedCreditsEarned: 3,
+        parserId: "valencia-college",
+        detectionScore: 1,
+        usedGenericFallback: false,
         warnings: [],
       }),
     )
@@ -182,11 +202,51 @@ describe("POST /api/transcript/analyze", () => {
   })
 
   it("analyzes a CSV transcript", async () => {
+    const transcriptText = "English Composition I,A,3 credits"
+
+    const file = new File([transcriptText], "transcript.csv", {
+      type: "text/csv",
+    })
+
+    const response = await POST(createUploadRequest(file))
+
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+
+    expect(payload.success).toBe(true)
+
+    expect(payload.analysis.fileType).toBe("csv")
+
+    expect(mockedParseTranscriptTextDetailed).toHaveBeenCalledWith(
+      transcriptText,
+    )
+  })
+
+  it("returns parser warnings for a generic transcript", async () => {
+    mockedParseTranscriptTextDetailed.mockReturnValue({
+      courses: [
+        createTranscriptCourse({
+          id: "course-1",
+          title: "Introduction to Programming",
+          subjectArea: "computer_science",
+          credits: 4,
+          completionStatus: "passed",
+          includedInPlan: true,
+          source: "extracted",
+        }),
+      ],
+      parserId: "generic-course-row",
+      detectionScore: 0.1,
+      usedGenericFallback: false,
+      warnings: [genericParserWarning],
+    })
+
     const file = new File(
-      ["English Composition I,A,3 credits"],
-      "transcript.csv",
+      ["CS 101 Introduction to Programming 4.00 A"],
+      "unknown-school.txt",
       {
-        type: "text/csv",
+        type: "text/plain",
       },
     )
 
@@ -195,12 +255,62 @@ describe("POST /api/transcript/analyze", () => {
     const payload = await response.json()
 
     expect(response.status).toBe(200)
-    expect(payload.success).toBe(true)
-    expect(payload.analysis.fileType).toBe("csv")
+
+    expect(payload.analysis.parserId).toBe("generic-course-row")
+
+    expect(payload.analysis.detectionScore).toBe(0.1)
+
+    expect(payload.analysis.usedGenericFallback).toBe(false)
+
+    expect(payload.analysis.warnings).toEqual([genericParserWarning])
+  })
+
+  it("returns a warning when generic fallback was required", async () => {
+    mockedParseTranscriptTextDetailed.mockReturnValue({
+      courses: [
+        createTranscriptCourse({
+          id: "course-1",
+          title: "College Algebra",
+          subjectArea: "mathematics",
+          credits: 3,
+          completionStatus: "passed",
+          includedInPlan: true,
+          source: "extracted",
+        }),
+      ],
+      parserId: "generic-course-row",
+      detectionScore: 0.8,
+      usedGenericFallback: true,
+      warnings: [genericFallbackWarning],
+    })
+
+    const file = new File(
+      ["MATH 120 College Algebra 3.00 B"],
+      "fallback-transcript.txt",
+      {
+        type: "text/plain",
+      },
+    )
+
+    const response = await POST(createUploadRequest(file))
+
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+
+    expect(payload.analysis.usedGenericFallback).toBe(true)
+
+    expect(payload.analysis.warnings).toEqual([genericFallbackWarning])
   })
 
   it("rejects text with no recognizable courses", async () => {
-    mockedParseTranscriptText.mockReturnValue([])
+    mockedParseTranscriptTextDetailed.mockReturnValue({
+      courses: [],
+      parserId: "generic-course-row",
+      detectionScore: 0.1,
+      usedGenericFallback: false,
+      warnings: [genericParserWarning],
+    })
 
     const file = new File(["Transcript heading only"], "transcript.txt", {
       type: "text/plain",
@@ -228,7 +338,9 @@ describe("POST /api/transcript/analyze", () => {
     const payload = await response.json()
 
     expect(response.status).toBe(200)
+
     expect(payload.success).toBe(true)
+
     expect(payload.analysis.fileType).toBe("pdf")
 
     expect(mockedExtractPdfText).toHaveBeenCalledOnce()
@@ -249,7 +361,46 @@ describe("POST /api/transcript/analyze", () => {
       "English Composition I A 3 credits",
     )
 
+    expect(mockedParseTranscriptTextDetailed).toHaveBeenCalledWith(
+      "English Composition I A 3 credits",
+    )
+
     expect(payload.analysis.warnings).toEqual([
+      "Extracted selectable text from 1 PDF page. Review every detected course before generating a plan.",
+    ])
+  })
+
+  it("combines parser warnings with the PDF review warning", async () => {
+    mockedParseTranscriptTextDetailed.mockReturnValue({
+      courses: [
+        createTranscriptCourse({
+          id: "course-1",
+          title: "Introduction to Programming",
+          subjectArea: "computer_science",
+          credits: 4,
+          completionStatus: "passed",
+          includedInPlan: true,
+          source: "extracted",
+        }),
+      ],
+      parserId: "generic-course-row",
+      detectionScore: 0.1,
+      usedGenericFallback: false,
+      warnings: [genericParserWarning],
+    })
+
+    const file = new File(["fake-pdf"], "transcript.pdf", {
+      type: "application/pdf",
+    })
+
+    const response = await POST(createUploadRequest(file))
+
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+
+    expect(payload.analysis.warnings).toEqual([
+      genericParserWarning,
       "Extracted selectable text from 1 PDF page. Review every detected course before generating a plan.",
     ])
   })
@@ -294,10 +445,18 @@ describe("POST /api/transcript/analyze", () => {
       error:
         "This PDF does not contain enough selectable text. It may be a scanned transcript and will require OCR.",
     })
+
+    expect(mockedParseTranscriptTextDetailed).not.toHaveBeenCalled()
   })
 
   it("rejects extracted PDF text with no recognizable courses", async () => {
-    mockedParseTranscriptText.mockReturnValue([])
+    mockedParseTranscriptTextDetailed.mockReturnValue({
+      courses: [],
+      parserId: "valencia-college",
+      detectionScore: 1,
+      usedGenericFallback: false,
+      warnings: [],
+    })
 
     const file = new File(["fake-pdf"], "transcript.pdf", {
       type: "application/pdf",
@@ -332,12 +491,14 @@ describe("POST /api/transcript/analyze", () => {
       error:
         "Image transcript analysis is not implemented yet. Upload a selectable-text PDF, TXT, or CSV file.",
     })
+
+    expect(mockedParseTranscriptTextDetailed).not.toHaveBeenCalled()
   })
 
   it("returns a generic server error when analysis fails", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
 
-    mockedParseTranscriptText.mockImplementation(() => {
+    mockedParseTranscriptTextDetailed.mockImplementation(() => {
       throw new Error("Sensitive internal error")
     })
 

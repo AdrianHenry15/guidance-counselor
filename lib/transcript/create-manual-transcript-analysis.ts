@@ -12,6 +12,9 @@ export function createManualTranscriptAnalysis(): TranscriptAnalysis {
     estimatedCreditsEarned: 0,
     courses: [],
     warnings: [],
+    parserId: "manual-entry",
+    detectionScore: 1,
+    usedGenericFallback: false,
     analyzedAt: new Date().toISOString(),
   }
 }

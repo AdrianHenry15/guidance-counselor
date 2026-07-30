@@ -1,5 +1,9 @@
 import type { EducationLevel, SubjectArea } from "@/types/academic.type"
 
+export type TranscriptParserId =
+  | "manual-entry"
+  | "generic-course-row"
+  | "valencia-college"
 export type TranscriptCourseSource = "extracted" | "manual"
 
 export type TranscriptLineType =
@@ -38,12 +42,13 @@ export interface TranscriptAnalysis {
   id: string
   fileName: string
   fileType: TranscriptFileType
-  studentName?: string
-  institution?: string
   educationLevel: EducationLevel
   estimatedCreditsEarned: number
   courses: TranscriptCourse[]
   warnings: string[]
+  parserId: TranscriptParserId
+  detectionScore: number
+  usedGenericFallback: boolean
   analyzedAt: string
 }
 

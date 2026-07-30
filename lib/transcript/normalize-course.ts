@@ -5,16 +5,32 @@ interface NormalizedCourseResult {
   subjectArea: SubjectArea
 }
 
-const normalizationRules: Array<{
+interface NormalizationRule {
   patterns: RegExp[]
   result: NormalizedCourseResult
-}> = [
+}
+
+interface SubjectClassificationRule {
+  patterns: RegExp[]
+  subjectArea: SubjectArea
+}
+
+/**
+ * Exact course mappings.
+ *
+ * These rules replace known institution-specific or alternate course names
+ * with the generalized title used by the planner.
+ */
+const normalizationRules: NormalizationRule[] = [
   {
     patterns: [
       /english composition i\b/i,
       /composition 1\b/i,
       /freshman composition i\b/i,
+      /freshman comp i\b/i,
+      /freshman comp 1\b/i,
       /enc\s*1101/i,
+      /^(?:english\s+(?:composition|comp)|freshman\s+(?:composition|comp))\s*(?:i|1)$/i,
     ],
     result: {
       normalizedTitle: "English Composition I",
@@ -26,11 +42,41 @@ const normalizationRules: Array<{
       /english composition ii\b/i,
       /composition 2\b/i,
       /freshman composition ii\b/i,
+      /freshman comp ii\b/i,
+      /freshman comp 2\b/i,
       /enc\s*1102/i,
     ],
     result: {
       normalizedTitle: "English Composition II",
       subjectArea: "english",
+    },
+  },
+  {
+    patterns: [
+      /english composition ii\b/i,
+      /composition 2\b/i,
+      /freshman composition ii\b/i,
+      /freshman comp ii\b/i,
+      /freshman comp 2\b/i,
+      /enc\s*1102/i,
+    ],
+    result: {
+      normalizedTitle: "English Composition II",
+      subjectArea: "english",
+    },
+  },
+  {
+    patterns: [
+      /new student experience/i,
+      /college success/i,
+      /student success/i,
+      /first year experience/i,
+      /first-year experience/i,
+      /sls\s*1122/i,
+    ],
+    result: {
+      normalizedTitle: "College Success",
+      subjectArea: "college_success",
     },
   },
   {
@@ -117,24 +163,80 @@ const normalizationRules: Array<{
 ]
 
 /**
+ * Broader subject classification.
+ *
+ * These rules assign the correct subject area while preserving the actual
+ * transcript title. They run only when no exact normalization rule matched.
+ */
+const subjectClassificationRules: SubjectClassificationRule[] = [
+  {
+    patterns: [
+      /\btrigonometry\b/i,
+      /\bprecalculus\b/i,
+      /\bpre-calculus\b/i,
+      /\bcalculus\b/i,
+      /\balgebra\b/i,
+      /\bgeometry\b/i,
+      /\bstatistics\b/i,
+      /\bprobability\b/i,
+      /\bdiscrete mathematics\b/i,
+      /\blinear algebra\b/i,
+      /\bquantitative reasoning\b/i,
+    ],
+    subjectArea: "mathematics",
+  },
+  {
+    patterns: [
+      /\bitalian\b/i,
+      /\bspanish\b/i,
+      /\bfrench\b/i,
+      /\bgerman\b/i,
+      /\bportuguese\b/i,
+      /\blatin\b/i,
+      /\barabic\b/i,
+      /\bjapanese\b/i,
+      /\bkorean\b/i,
+      /\bmandarin\b/i,
+      /\bchinese\b/i,
+      /\bamerican sign language\b/i,
+      /\b(?:asl)\b/i,
+    ],
+    subjectArea: "foreign_language",
+  },
+]
+
+/**
  * Converts a transcript course name into a generalized planner course.
  */
 export function normalizeCourseName(
   originalName: string,
 ): NormalizedCourseResult {
-  const match = normalizationRules.find((rule) =>
-    rule.patterns.some((pattern) => pattern.test(originalName)),
+  const trimmedName = originalName.replace(/\s+/g, " ").trim()
+
+  const normalizationMatch = normalizationRules.find((rule) =>
+    rule.patterns.some((pattern) => pattern.test(trimmedName)),
   )
 
-  if (match) {
-    return match.result
+  if (normalizationMatch) {
+    return normalizationMatch.result
+  }
+
+  const classificationMatch = subjectClassificationRules.find((rule) =>
+    rule.patterns.some((pattern) => pattern.test(trimmedName)),
+  )
+
+  if (classificationMatch) {
+    return {
+      normalizedTitle: trimmedName,
+      subjectArea: classificationMatch.subjectArea,
+    }
   }
 
   /**
    * Unknown courses remain editable and default to general elective credit.
    */
   return {
-    normalizedTitle: originalName.trim(),
+    normalizedTitle: trimmedName,
     subjectArea: "general_elective",
   }
 }
